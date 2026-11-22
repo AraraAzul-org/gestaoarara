@@ -136,11 +136,16 @@ export default async function Ajuda() {
           </p>
           <Itens>
             <li>
-              <strong>Associados por situação:</strong> gráfico de barras e tabela com as colunas Associado, Situação,
-              Data e Tempo. Só entram associados ativos e que fazem parte do grupo. A ordem das situações é fixa:
+              <strong>Associados por situação:</strong> gráfico de barras com a quantidade de associados e o tempo médio
+              na situação. Só entram associados ativos e que fazem parte do grupo. A ordem das situações é fixa:
               Formação não iniciada, Curso Preliminar, Nível Preliminar, Curso Intermediário, Nível Intermediário, Curso
               Avançado e Nível Avançado; quem está sem situação fica por último. Esse bloco exige a liberação de
-              Resultados.
+              Resultados. A antiga tabela de associados não é mais exibida.
+            </li>
+            <li>
+              <strong>Adultos por ramo e Jovens por ramo:</strong> para dirigentes, dois gráficos adicionais mostram o
+              total de adultos ativos do grupo e de jovens ativos em cada ramo. Quem está sem ramo aparece em “Sem
+              ramo”. Com isso o Dashboard passa a ter três gráficos.
             </li>
             <li>
               <strong>Promessas do ramo:</strong> para escotistas, mostra quem completa anos de promessa no mês atual,

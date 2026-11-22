@@ -4,7 +4,7 @@ import { carregarSessao } from "@/lib/eu";
 import { primeiraRota } from "@/lib/menu";
 import { Shell } from "@/components/Shell";
 import { GraficoDistribuicao, type ItemDistribuicao } from "@/components/GraficoDistribuicao";
-import { tempoDesde, tempoMedioDesde } from "@/lib/tempo";
+import { tempoMedioDesde } from "@/lib/tempo";
 import { anosPromessa, fimMesAtualBR, MESES, mesAtualBR } from "@/lib/promessa";
 import { dataBR } from "@/lib/data";
 import { calcularJovem } from "@/lib/jovem";
@@ -12,6 +12,7 @@ import { calcularJovem } from "@/lib/jovem";
 export const instant = false;
 
 const SEM_SITUACAO = "Sem situação";
+const SEM_RAMO = "Sem ramo";
 
 // Ordem fixa das situações no gráfico da Home. Situações fora desta lista
 // (e "Sem situação") vão para o fim, em ordem alfabética.
@@ -33,8 +34,16 @@ const posicaoSituacao = (rotulo: string) => {
   return rotulo === SEM_SITUACAO ? ORDEM_SITUACOES.length : ORDEM_SITUACOES.length + 1;
 };
 
-type PessoaBruta = { idusuario: number; nome: string; idsituacao: number | null; datasituacao: string | null };
+type PessoaBruta = {
+  idusuario: number;
+  nome: string;
+  idramo: number | null;
+  idsituacao: number | null;
+  datasituacao: string | null;
+};
 type Pessoa = { idusuario: number; nome: string; situacao: string; datasituacao: string | null };
+type Ramo = { idramo: number; nome: string };
+type RegistroRamo = { idramo: number | null };
 
 type PromessaAdulto = {
   idusuario: number;
@@ -100,15 +109,16 @@ export default async function Home() {
 
   if (!eu.acessos.has("inicio")) redirect(primeiraRota(eu.acessos));
 
-  const [pessoasBrutas, situacoes, avaliacao] = await Promise.all([
-    eu.podeResultados
+  const verResultados = eu.dirigente || eu.podeResultados;
+  const [pessoasBrutas, situacoes, avaliacao, ramos, jovensBruto] = await Promise.all([
+    verResultados
       ? supabase
           .from("usuario")
-          .select("idusuario, nome, idsituacao, datasituacao")
+          .select("idusuario, nome, idramo, idsituacao, datasituacao")
           .eq("ativo", true)
           .eq("membrogrupo", true)
       : Promise.resolve({ data: [] as PessoaBruta[] }),
-    eu.podeResultados
+    verResultados
       ? supabase.from("situacao").select("idsituacao, situacao")
       : Promise.resolve({ data: [] as { idsituacao: number; situacao: string }[] }),
     supabase
@@ -118,6 +128,12 @@ export default async function Home() {
       .order("prazo", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    eu.dirigente
+      ? supabase.from("ramo").select("idramo, nome").order("nome")
+      : Promise.resolve({ data: [] as Ramo[] }),
+    eu.dirigente
+      ? supabase.from("jovem").select("idramo").eq("ativo", true)
+      : Promise.resolve({ data: [] as RegistroRamo[] }),
   ]);
 
   const nomeSituacao = new Map((situacoes.data ?? []).map((s) => [s.idsituacao, s.situacao]));
@@ -150,6 +166,29 @@ export default async function Home() {
         posicaoSituacao(a.rotulo) - posicaoSituacao(b.rotulo) ||
         a.rotulo.localeCompare(b.rotulo, "pt-BR", { sensitivity: "base" }),
     );
+
+  const listaRamos = ((ramos.data ?? []) as Ramo[])
+    .slice()
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" }));
+
+  const distribuirPorRamo = (registros: RegistroRamo[]): ItemDistribuicao[] => {
+    const contagemRamo = new Map<number | null, number>();
+    registros.forEach((registro) => {
+      contagemRamo.set(registro.idramo, (contagemRamo.get(registro.idramo) ?? 0) + 1);
+    });
+    const itensRamo = listaRamos.map((ramo) => ({
+      rotulo: ramo.nome,
+      quantidade: contagemRamo.get(ramo.idramo) ?? 0,
+    }));
+    const semRamo = contagemRamo.get(null) ?? 0;
+    if (semRamo > 0) itensRamo.push({ rotulo: SEM_RAMO, quantidade: semRamo });
+    return itensRamo;
+  };
+
+  const adultosPorRamo = distribuirPorRamo((pessoasBrutas.data ?? []) as RegistroRamo[]);
+  const jovensPorRamo = distribuirPorRamo((jovensBruto.data ?? []) as RegistroRamo[]);
+  const total = (itensRamo: ItemDistribuicao[]) =>
+    itensRamo.reduce((soma, item) => soma + item.quantidade, 0);
 
   // Escotistas do grupo veem, na home, quem completa anos de promessa no mês
   // atual no mesmo ramo. Sem filtro de situação: apenas mês e ramo.
@@ -226,8 +265,8 @@ export default async function Home() {
           </p>
         )}
 
-        {eu.podeResultados && (
-          <div className="mt-6 grid items-start gap-6 xl:grid-cols-[22rem_minmax(0,1fr)]">
+        {verResultados && (
+          <div className="mt-6 grid items-start gap-6 md:grid-cols-2 xl:grid-cols-3">
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
               <div className="flex flex-wrap items-center gap-2 border-b-2 border-amarelo bg-azul p-3 text-white">
                 <h2 className="flex-1 text-sm font-semibold">Associados por situação</h2>
@@ -244,40 +283,33 @@ export default async function Home() {
               </div>
             </section>
 
-            <section className="overflow-hidden rounded-lg border border-gray-200 border-l-4 border-l-amarelo bg-white shadow-sm">
-              <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 bg-gray-50/60 px-4 py-2.5">
-                <h2 className="flex-1 text-sm font-semibold text-gray-800">Associados e situação</h2>
-                <span className="text-xs text-gray-500">Ordenado por nome</span>
-              </div>
-              {!pessoas.length ? (
-                <p className="px-4 py-4 text-sm text-gray-600">Nenhum associado cadastrado.</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                    <thead>
-                      <tr className="border-b bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
-                        <th className="px-4 py-2 font-medium">Associado</th>
-                        <th className="px-4 py-2 font-medium">Situação</th>
-                        <th className="px-4 py-2 font-medium">Data</th>
-                        <th className="px-4 py-2 text-right font-medium">Tempo</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {pessoas.map((p) => (
-                        <tr key={p.idusuario}>
-                          <td className="whitespace-nowrap px-4 py-2 font-medium text-gray-900">{p.nome}</td>
-                          <td className="whitespace-nowrap px-4 py-2 text-gray-700">{p.situacao || SEM_SITUACAO}</td>
-                          <td className="whitespace-nowrap px-4 py-2 text-gray-600">{dataBR(p.datasituacao)}</td>
-                          <td className="whitespace-nowrap px-4 py-2 text-right text-gray-700">
-                            {tempoDesde(p.datasituacao)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </section>
+            {eu.dirigente && (
+              <>
+                <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+                  <div className="flex flex-wrap items-center gap-2 border-b-2 border-amarelo bg-azul p-3 text-white">
+                    <h2 className="flex-1 text-sm font-semibold">Adultos por ramo</h2>
+                    <span className="rounded bg-white/90 px-2 py-0.5 text-xs font-medium text-gray-800">
+                      {total(adultosPorRamo)} {total(adultosPorRamo) === 1 ? "adulto" : "adultos"}
+                    </span>
+                  </div>
+                  <div className="p-4">
+                    <GraficoDistribuicao itens={adultosPorRamo} unidade="adulto" unidadePlural="adultos" />
+                  </div>
+                </section>
+
+                <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+                  <div className="flex flex-wrap items-center gap-2 border-b-2 border-amarelo bg-azul p-3 text-white">
+                    <h2 className="flex-1 text-sm font-semibold">Jovens por ramo</h2>
+                    <span className="rounded bg-white/90 px-2 py-0.5 text-xs font-medium text-gray-800">
+                      {total(jovensPorRamo)} {total(jovensPorRamo) === 1 ? "jovem" : "jovens"}
+                    </span>
+                  </div>
+                  <div className="p-4">
+                    <GraficoDistribuicao itens={jovensPorRamo} unidade="jovem" unidadePlural="jovens" />
+                  </div>
+                </section>
+              </>
+            )}
           </div>
         )}
 

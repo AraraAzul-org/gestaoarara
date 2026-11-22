@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
-import { ITENS_MENU, MENU_GRUPOS } from "@/lib/menu";
+import { ITENS_MENU, MENU_GRUPOS, itensMenuOrdenados } from "@/lib/menu";
 import { copiarAcessos, salvarAcessos } from "@/app/usuarios/[id]/acessos/actions";
 
 type Usuario = { idusuario: number; nome: string; email: string };
@@ -106,7 +106,7 @@ export function FormAcessos({
         <input type="hidden" name="idusuario" value={selecionado} />
 
         {MENU_GRUPOS.map((grupo) => {
-          const itens = ITENS_MENU.filter((item) => item.grupo === grupo);
+          const itens = itensMenuOrdenados(ITENS_MENU.filter((item) => item.grupo === grupo));
           if (!itens.length) return null;
           return (
             <fieldset key={grupo} className="mt-4 border-t border-gray-100 pt-4 first:mt-0 first:border-0 first:pt-0">

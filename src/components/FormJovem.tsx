@@ -120,43 +120,45 @@ export function FormJovem(props: {
       action={props.action}
       className="mt-4 grid gap-3 rounded border border-gray-200 border-l-4 border-l-amarelo bg-white p-4 sm:grid-cols-2"
     >
-      <label className="text-sm">Nome *
-        <input name="nome" required defaultValue={v.nome ?? ""} className={campo} />
-      </label>
-      <label className="text-sm">Ramo *
-        <select
-          name="idramo"
-          required
-          value={idramo}
-          onChange={(e) => setIdramo(e.target.value)}
-          className={campo}
-        >
-          <option value="" disabled>Selecione</option>
-          {props.ramos.map((o) => (
-            <option key={o.id} value={o.id}>{o.rotulo}</option>
-          ))}
-        </select>
-      </label>
-      <label className="text-sm sm:col-span-2">Registro * (alfanumérico)
-        <input
-          name="registro"
-          required
-          maxLength={30}
-          autoComplete="off"
-          defaultValue={v.registro ?? ""}
-          className={campo}
-        />
-      </label>
-      <Data nome="dataregistro" rotulo="Data de registro" valor={v.dataregistro} />
-      <Data nome="datanascimento" rotulo="Data de nascimento" valor={v.datanascimento} obrigatoria />
-      <label className="text-sm">Data da medalha Bons Serviços
-        <input
-          name="datamedalhabonservicos"
-          type="date"
-          defaultValue={v.datamedalhabonservicos?.slice(0, 10) ?? ""}
-          className={campo}
-        />
-      </label>
+      <div className="grid gap-3 sm:col-span-2 sm:grid-cols-3">
+        <label className="text-sm">Registro * (alfanumérico)
+          <input
+            name="registro"
+            required
+            maxLength={30}
+            autoComplete="off"
+            defaultValue={v.registro ?? ""}
+            className={campo}
+          />
+        </label>
+        <label className="text-sm">Nome *
+          <input name="nome" required defaultValue={v.nome ?? ""} className={campo} />
+        </label>
+        <label className="text-sm">Ramo *
+          <select
+            name="idramo"
+            required
+            value={idramo}
+            onChange={(e) => setIdramo(e.target.value)}
+            className={campo}
+          >
+            <option value="" disabled>Selecione</option>
+            {props.ramos.map((o) => (
+              <option key={o.id} value={o.id}>{o.rotulo}</option>
+            ))}
+          </select>
+        </label>
+        <Data nome="dataregistro" rotulo="Data de registro" valor={v.dataregistro} />
+        <Data nome="datanascimento" rotulo="Data de nascimento" valor={v.datanascimento} obrigatoria />
+        <label className="text-sm">Data da medalha Bons Serviços
+          <input
+            name="datamedalhabonservicos"
+            type="date"
+            defaultValue={v.datamedalhabonservicos?.slice(0, 10) ?? ""}
+            className={campo}
+          />
+        </label>
+      </div>
 
       <label className="flex items-center gap-2 text-sm sm:col-span-2">
         <input name="ativo" type="checkbox" defaultChecked={v.ativo ?? true} />

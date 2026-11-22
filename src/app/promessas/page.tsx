@@ -149,11 +149,12 @@ export default async function Promessas({
 
   const linhas = [...linhasAdultos, ...linhasJovens].sort(ordenarPorNome);
 
-  // Visão separada: quem é do ramo do próprio usuário e não tem promessa/acolhida.
-  // Não sofre influência do mês nem do ramo selecionados acima.
+  // Visão separada: quem não tem promessa/acolhida. Quem não é dirigente fica
+  // preso ao próprio ramo; a direção usa o ramo selecionado no filtro da tela.
+  // O mês nunca influencia esta lista.
   const semPromessa: SemPromessa[] = [
     ...adultos
-      .filter((a) => eu.idramo !== null && a.idramo === eu.idramo && !a.datapromessa)
+      .filter((a) => ramoEscolhido !== null && a.idramo === ramoEscolhido && !a.datapromessa)
       .map((a) => ({
         tipo: "Adulto" as const,
         nome: a.nome,
@@ -163,7 +164,7 @@ export default async function Promessas({
         dataRegistro: a.datasituacao,
       })),
     ...jovens
-      .filter((j) => eu.idramo !== null && j.idramo === eu.idramo && !dataPromessaOuAcolhida(j))
+      .filter((j) => ramoEscolhido !== null && j.idramo === ramoEscolhido && !dataPromessaOuAcolhida(j))
       .map((j) => ({
         tipo: "Jovem" as const,
         nome: j.nome,
@@ -173,6 +174,11 @@ export default async function Promessas({
         dataRegistro: j.dataregistro,
       })),
   ].sort(ordenarPorNome);
+
+  const nomeRamoAlvo = ramoEscolhido === null ? "—" : nomeRamo.get(ramoEscolhido) ?? "—";
+  const descricaoSemPromessa = eu.dirigente
+    ? `Pessoas do ramo selecionado no filtro (${nomeRamoAlvo}) sem promessa registrada; para filhotes, sem acolhida. Esta lista não é afetada pelo mês.`
+    : `Pessoas do seu ramo (${nomeRamoAlvo}) sem promessa registrada; para filhotes, sem acolhida. Esta lista não é afetada pelo mês nem pelo ramo escolhidos acima.`;
 
   return (
     <Shell>
@@ -257,16 +263,15 @@ export default async function Promessas({
         <section className="mt-8 overflow-hidden rounded-lg border border-gray-200 border-l-4 border-l-azul bg-white shadow-sm">
           <div className="border-b border-gray-100 bg-gray-50/60 px-4 py-2.5">
             <h2 className="font-semibold text-azul">Sem promessa / acolhida</h2>
-            <p className="mt-0.5 text-xs text-gray-600">
-              Pessoas do seu ramo ({eu.idramo === null ? "—" : nomeRamo.get(eu.idramo) ?? "—"}) sem promessa registrada;
-              para filhotes, sem acolhida. Esta lista não é afetada pelo mês nem pelo ramo escolhidos acima.
-            </p>
+            <p className="mt-0.5 text-xs text-gray-600">{descricaoSemPromessa}</p>
           </div>
           {!semPromessa.length ? (
             <p className="px-4 py-8 text-center text-sm text-gray-500">
-              {eu.idramo === null
-                ? "Seu usuário não está vinculado a um ramo."
-                : "Ninguém do seu ramo está sem promessa ou acolhida."}
+              {ramoEscolhido === null
+                ? "Nenhum ramo selecionado."
+                : eu.dirigente
+                  ? "Ninguém do ramo selecionado está sem promessa ou acolhida."
+                  : "Ninguém do seu ramo está sem promessa ou acolhida."}
             </p>
           ) : (
             <div className="overflow-x-auto">

@@ -10,7 +10,7 @@ export type ItemMenu = {
 };
 
 export const ITENS_MENU: ItemMenu[] = [
-  { chave: "inicio", rotulo: "Início", href: "/", grupo: "Geral" },
+  { chave: "inicio", rotulo: "Dashboard", href: "/", grupo: "Geral" },
   { chave: "jovens", rotulo: "Jovens", href: "/jovens", grupo: "Geral" },
   { chave: "promessas", rotulo: "Promessas", href: "/promessas", grupo: "Geral" },
   { chave: "lencos", rotulo: "Lenços", href: "/lencos", grupo: "Geral" },
@@ -28,6 +28,18 @@ export const ITENS_MENU: ItemMenu[] = [
   { chave: "resultados", rotulo: "Resultados", href: "/resultados", grupo: "Direção" },
   { chave: "acessolog", rotulo: "Log de acesso", href: "/acessolog", grupo: "Direção" },
 ];
+
+// Ordem de exibição: alfabética por rótulo dentro de cada grupo, com o
+// Dashboard sempre fixado em primeiro lugar.
+export function itensMenuOrdenados(itens: ItemMenu[] = ITENS_MENU): ItemMenu[] {
+  return [...itens].sort((a, b) => {
+    if (a.chave === "inicio" || b.chave === "inicio") {
+      if (a.chave === b.chave) return 0;
+      return a.chave === "inicio" ? -1 : 1;
+    }
+    return a.rotulo.localeCompare(b.rotulo, "pt-BR", { sensitivity: "base" });
+  });
+}
 
 export const CHAVES_MENU = ITENS_MENU.map((item) => item.chave);
 

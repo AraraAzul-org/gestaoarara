@@ -18,7 +18,7 @@ const ROTULOS: Array<{ prefixo: string; rotulo: string }> = [
 ];
 
 export function rotuloAcesso(caminho: string): string {
-  if (caminho === "/") return "Início";
+  if (caminho === "/") return "Dashboard";
   const encontrado = ROTULOS.find(
     ({ prefixo }) => caminho === prefixo || caminho.startsWith(`${prefixo}/`),
   );

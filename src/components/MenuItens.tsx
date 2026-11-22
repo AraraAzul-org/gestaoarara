@@ -3,12 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ITENS_MENU, MENU_GRUPOS, type ItemMenu } from "@/lib/menu";
+import { ITENS_MENU, MENU_GRUPOS, itensMenuOrdenados, type ItemMenu } from "@/lib/menu";
 
 export function MenuItens({ acessos }: { acessos: string[] }) {
   const caminho = usePathname();
   const base = "whitespace-nowrap rounded px-3 py-2 text-sm text-white";
-  const liberados = ITENS_MENU.filter((item) => acessos.includes(item.chave));
+  const liberados = itensMenuOrdenados(
+    ITENS_MENU.filter((item) => acessos.includes(item.chave)),
+  );
 
   // Quando duas rotas se sobrepõem (ex.: /lencos e /lencos/cadastro), só a
   // mais específica deve aparecer como selecionada.

@@ -1,4 +1,4 @@
-# Gestão de Adultos
+# Gestão do Grupo
 
 Sistema de gestão dos adultos do grupo escoteiro. Cada adulto responde o
 questionário da avaliação aberta; diretores administram o cadastro e os APFs

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Gestão de Adultos",
+  title: "Gestão do Grupo",
   description: "Gestão dos adultos do Grupo Escoteiro Arara Azul",
 };
 

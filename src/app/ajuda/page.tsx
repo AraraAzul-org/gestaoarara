@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { carregarSessao } from "@/lib/eu";
 import { Shell } from "@/components/Shell";
 
-export const metadata: Metadata = { title: "Ajuda · Gestão de Adultos" };
+export const metadata: Metadata = { title: "Ajuda · Gestão do Grupo" };
 export const instant = false;
 
 const INDICE = [
@@ -80,7 +80,7 @@ export default async function Ajuda() {
       <main className="max-w-5xl p-4">
         <h1 className="text-xl font-semibold text-azul">Ajuda — Guia do sistema</h1>
         <p className="mt-1 text-sm text-gray-600">
-          Guia completo do Gestão de Adultos do Grupo Escoteiro Arara Azul. Aqui você encontra para que serve cada
+          Guia completo da Gestão do Grupo do Grupo Escoteiro Arara Azul. Aqui você encontra para que serve cada
           tela, como preencher os formulários e quais regras de acesso se aplicam.
         </p>
         <p className="mt-2 text-sm text-gray-600">
@@ -470,7 +470,7 @@ export default async function Ajuda() {
         </Secao>
 
         <p className="mt-6 text-center text-xs text-gray-500">
-          Gestão de Adultos · Grupo Escoteiro Arara Azul — em caso de dúvida, procure a direção do grupo.
+          Gestão do Grupo · Grupo Escoteiro Arara Azul — em caso de dúvida, procure a direção do grupo.
         </p>
       </main>
     </Shell>

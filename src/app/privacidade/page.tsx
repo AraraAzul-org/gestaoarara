@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PaginaPublica } from "@/components/PaginaPublica";
 
-export const metadata: Metadata = { title: "Política de Privacidade · Gestão de Adultos" };
+export const metadata: Metadata = { title: "Política de Privacidade · Gestão do Grupo" };
 
 const CONTATO = process.env.NEXT_PUBLIC_CONTATO_EMAIL;
 

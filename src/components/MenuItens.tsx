@@ -3,11 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ITENS_MENU, MENU_GRUPOS, itensMenuOrdenados, type ItemMenu } from "@/lib/menu";
+import { ITENS_MENU, itensMenuOrdenados, type ItemMenu } from "@/lib/menu";
 
 export function MenuItens({ acessos }: { acessos: string[] }) {
   const caminho = usePathname();
-  const base = "whitespace-nowrap rounded px-3 py-2 text-sm text-white";
+  // A cor do texto é definida por estado. Se `text-white` ficasse na base, a
+  // ordem das utilidades do Tailwind poderia sobrepor o `text-azul` do item
+  // ativo e deixar o fundo e a letra brancos.
+  const base = "whitespace-nowrap rounded px-3 py-2 text-sm";
   const liberados = itensMenuOrdenados(
     ITENS_MENU.filter((item) => acessos.includes(item.chave)),
   );
@@ -33,7 +36,7 @@ export function MenuItens({ acessos }: { acessos: string[] }) {
       key={item.chave}
       href={item.href}
       aria-current={ativo(item) ? "page" : undefined}
-      className={`${base} ${extra} ${ativo(item) ? "bg-white font-semibold text-azul" : "hover:bg-white/15"}`}
+      className={`${base} ${extra} ${ativo(item) ? "bg-white font-semibold text-azul" : "text-white hover:bg-white/15"}`}
     >
       {item.rotulo}
     </Link>
@@ -48,21 +51,37 @@ export function MenuItens({ acessos }: { acessos: string[] }) {
   const [escolha, setEscolha] = useState<boolean | null>(null);
   const aberto = escolha ?? dentroDeCadastros;
 
+  // Sequência única do menu: itens comuns e o bloco recolhível "Cadastros"
+  // ordenados pelo rótulo. Dashboard já vem primeiro em `liberados`.
+  type Entrada = { tipo: "item"; item: ItemMenu } | { tipo: "cadastros" };
+  const entradas: Entrada[] = [
+    ...liberados
+      .filter((item) => item.grupo !== "Cadastros")
+      .map((item): Entrada => ({ tipo: "item", item })),
+    ...(cadastros.length ? ([{ tipo: "cadastros" }] as Entrada[]) : []),
+  ].sort((a, b) => {
+    if (a.tipo === "item" && a.item.chave === "inicio") return -1;
+    if (b.tipo === "item" && b.item.chave === "inicio") return 1;
+    const rotuloA = a.tipo === "cadastros" ? "Cadastros" : a.item.rotulo;
+    const rotuloB = b.tipo === "cadastros" ? "Cadastros" : b.item.rotulo;
+    return rotuloA.localeCompare(rotuloB, "pt-BR", { sensitivity: "base" });
+  });
+
   return (
     <nav className="flex gap-1 overflow-x-auto border-b border-azul-escuro bg-azul p-2 md:w-60 md:shrink-0 md:flex-col md:overflow-visible md:border-b-0 md:border-r md:p-3">
-      {MENU_GRUPOS.map((grupo) => {
-        const itens = liberados.filter((item) => item.grupo === grupo);
-        if (!itens.length) return null;
-
-        if (grupo === "Cadastros") {
-          return (
-            <div key={grupo} className="flex items-center gap-1 md:mt-2 md:flex-col md:items-stretch md:gap-0.5">
+      <div className="flex gap-1 md:mt-2 md:flex-col md:gap-0.5">
+        {entradas.map((entrada) =>
+          entrada.tipo === "cadastros" ? (
+            <div
+              key="cadastros"
+              className="flex items-center gap-1 md:flex-col md:items-stretch md:gap-0.5"
+            >
               <button
                 type="button"
                 onClick={() => setEscolha(!aberto)}
                 aria-expanded={aberto}
                 aria-controls="menu-cadastros"
-                className={`${base} flex shrink-0 items-center gap-1.5 hover:bg-white/15 ${
+                className={`${base} flex shrink-0 items-center gap-1.5 text-white hover:bg-white/15 ${
                   dentroDeCadastros ? "font-semibold" : ""
                 }`}
               >
@@ -80,15 +99,11 @@ export function MenuItens({ acessos }: { acessos: string[] }) {
                 </div>
               )}
             </div>
-          );
-        }
-
-        return (
-          <div key={grupo} className="flex gap-1 md:mt-2 md:flex-col md:gap-0.5">
-            {itens.map((item) => ligacao(item))}
-          </div>
-        );
-      })}
+          ) : (
+            ligacao(entrada.item)
+          ),
+        )}
+      </div>
       {!liberados.length && (
         <span className="px-3 py-2 text-sm text-white/80">Nenhum menu liberado.</span>
       )}

@@ -1,6 +1,10 @@
 import Link from "next/link";
 
-export type ItemDistribuicao = { rotulo: string; quantidade: number };
+export type ItemDistribuicao = {
+  rotulo: string;
+  quantidade: number;
+  tempoMedio?: string | null;
+};
 
 export function GraficoDistribuicao({
   itens,
@@ -34,13 +38,18 @@ export function GraficoDistribuicao({
             <div
               className="mt-1 h-3 overflow-hidden rounded bg-gray-100"
               role="img"
-              aria-label={`${i.rotulo}: ${i.quantidade} ${rotuloUnidade}`}
+              aria-label={`${i.rotulo}: ${i.quantidade} ${rotuloUnidade}${
+                i.tempoMedio ? `, tempo médio de ${i.tempoMedio}` : ""
+              }`}
             >
               <div
                 className={`h-full rounded ${i.quantidade > 0 ? "bg-azul" : "bg-gray-200"}`}
                 style={{ width: i.quantidade > 0 ? `${pct}%` : "0%" }}
               />
             </div>
+            {i.tempoMedio && (
+              <p className="mt-1 text-xs text-gray-500">Tempo médio na situação: {i.tempoMedio}</p>
+            )}
           </>
         );
         return hrefPorRotulo ? (

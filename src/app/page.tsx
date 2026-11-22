@@ -4,7 +4,7 @@ import { carregarSessao } from "@/lib/eu";
 import { primeiraRota } from "@/lib/menu";
 import { Shell } from "@/components/Shell";
 import { GraficoDistribuicao, type ItemDistribuicao } from "@/components/GraficoDistribuicao";
-import { tempoDesde } from "@/lib/tempo";
+import { tempoDesde, tempoMedioDesde } from "@/lib/tempo";
 import { anosPromessa, fimMesAtualBR, MESES, mesAtualBR } from "@/lib/promessa";
 import { dataBR } from "@/lib/data";
 import { calcularJovem } from "@/lib/jovem";
@@ -131,10 +131,20 @@ export default async function Home() {
     }))
     .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" }));
 
-  const contagem = new Map<string, number>();
-  pessoas.forEach((p) => contagem.set(p.situacao, (contagem.get(p.situacao) ?? 0) + 1));
+  const contagem = new Map<string, { quantidade: number; datas: string[] }>();
+  pessoas.forEach((p) => {
+    const rotulo = p.situacao || SEM_SITUACAO;
+    const dados = contagem.get(rotulo) ?? { quantidade: 0, datas: [] };
+    dados.quantidade += 1;
+    if (p.datasituacao) dados.datas.push(p.datasituacao);
+    contagem.set(rotulo, dados);
+  });
   const itens: ItemDistribuicao[] = [...contagem.entries()]
-    .map(([rotulo, quantidade]) => ({ rotulo: rotulo || SEM_SITUACAO, quantidade }))
+    .map(([rotulo, dados]) => ({
+      rotulo,
+      quantidade: dados.quantidade,
+      tempoMedio: tempoMedioDesde(dados.datas) ?? "—",
+    }))
     .sort(
       (a, b) =>
         posicaoSituacao(a.rotulo) - posicaoSituacao(b.rotulo) ||

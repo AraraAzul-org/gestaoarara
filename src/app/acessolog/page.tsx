@@ -3,24 +3,12 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { carregarEu } from "@/lib/eu";
 import { Shell } from "@/components/Shell";
+import { dataFiltro, dataHoraBR } from "@/lib/data";
 
 export const instant = false;
 
 const campo = "rounded border border-gray-300 bg-white p-1.5 text-sm";
 const btn = "rounded bg-azul px-3 py-1.5 text-sm text-white hover:bg-azul-escuro";
-
-const dataValida = (valor?: string) =>
-  valor && /^\d{4}-\d{2}-\d{2}$/.test(valor) ? valor : null;
-
-const dataHoraBR = (iso: string) =>
-  new Intl.DateTimeFormat("pt-BR", {
-    timeZone: "America/Sao_Paulo",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(iso));
 
 type LogLinha = {
   idacessolog: number;
@@ -41,8 +29,8 @@ export default async function Acessolog({
 
   const params = await searchParams;
   const { de, ate, usuario } = params;
-  const inicio = dataValida(de);
-  const fim = dataValida(ate);
+  const inicio = dataFiltro(de);
+  const fim = dataFiltro(ate);
   const filtroUsuario = usuario && /^\d+$/.test(usuario) ? Number(usuario) : null;
   const pesquisou = ["de", "ate", "usuario"].some((k) => k in params);
 

@@ -7,21 +7,35 @@ import { ITENS_MENU, MENU_GRUPOS, type ItemMenu } from "@/lib/menu";
 
 export function MenuItens({ acessos }: { acessos: string[] }) {
   const caminho = usePathname();
-  const base = "whitespace-nowrap rounded px-3 py-2 text-sm";
+  const base = "whitespace-nowrap rounded px-3 py-2 text-sm text-white";
   const liberados = ITENS_MENU.filter((item) => acessos.includes(item.chave));
 
-  const ligacao = (item: ItemMenu, extra = "") => {
-    const ativo = item.href === "/" ? caminho === "/" : caminho.startsWith(item.href);
-    return (
-      <Link
-        key={item.chave}
-        href={item.href}
-        className={`${base} ${extra} ${ativo ? "bg-azul font-medium text-white" : "text-azul hover:bg-azul/10"}`}
-      >
-        {item.rotulo}
-      </Link>
+  // Quando duas rotas se sobrepõem (ex.: /lencos e /lencos/cadastro), só a
+  // mais específica deve aparecer como selecionada.
+  const ativo = (item: ItemMenu) => {
+    if (item.href === "/") return caminho === "/";
+    const correspondentes = liberados.filter(
+      (outro) =>
+        outro.href !== "/" &&
+        (caminho === outro.href || caminho.startsWith(`${outro.href}/`)),
     );
+    if (!correspondentes.length) return false;
+    const maisEspecifico = correspondentes.reduce((melhor, atual) =>
+      atual.href.length > melhor.href.length ? atual : melhor,
+    );
+    return maisEspecifico.chave === item.chave;
   };
+
+  const ligacao = (item: ItemMenu, extra = "") => (
+    <Link
+      key={item.chave}
+      href={item.href}
+      aria-current={ativo(item) ? "page" : undefined}
+      className={`${base} ${extra} ${ativo(item) ? "bg-white font-semibold text-azul" : "hover:bg-white/15"}`}
+    >
+      {item.rotulo}
+    </Link>
+  );
 
   const cadastros = liberados.filter((item) => item.grupo === "Cadastros");
   // O grupo nasce fechado. Se a pessoa estiver dentro de um cadastro, ele abre
@@ -33,7 +47,7 @@ export function MenuItens({ acessos }: { acessos: string[] }) {
   const aberto = escolha ?? dentroDeCadastros;
 
   return (
-    <nav className="flex gap-1 overflow-x-auto border-b bg-gray-50 p-2 md:w-60 md:shrink-0 md:flex-col md:overflow-visible md:border-b-0 md:border-r md:p-3">
+    <nav className="flex gap-1 overflow-x-auto border-b border-azul-escuro bg-azul p-2 md:w-60 md:shrink-0 md:flex-col md:overflow-visible md:border-b-0 md:border-r md:p-3">
       {MENU_GRUPOS.map((grupo) => {
         const itens = liberados.filter((item) => item.grupo === grupo);
         if (!itens.length) return null;
@@ -46,9 +60,9 @@ export function MenuItens({ acessos }: { acessos: string[] }) {
                 onClick={() => setEscolha(!aberto)}
                 aria-expanded={aberto}
                 aria-controls="menu-cadastros"
-                className={`${base} flex shrink-0 items-center gap-1.5 ${
-                  dentroDeCadastros ? "font-medium text-azul" : "text-azul"
-                } hover:bg-azul/10`}
+                className={`${base} flex shrink-0 items-center gap-1.5 hover:bg-white/15 ${
+                  dentroDeCadastros ? "font-semibold" : ""
+                }`}
               >
                 <span
                   aria-hidden="true"
@@ -74,7 +88,7 @@ export function MenuItens({ acessos }: { acessos: string[] }) {
         );
       })}
       {!liberados.length && (
-        <span className="px-3 py-2 text-sm text-gray-500">Nenhum menu liberado.</span>
+        <span className="px-3 py-2 text-sm text-white/80">Nenhum menu liberado.</span>
       )}
     </nav>
   );

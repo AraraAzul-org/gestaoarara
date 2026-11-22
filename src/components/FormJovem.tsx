@@ -120,16 +120,6 @@ export function FormJovem(props: {
       action={props.action}
       className="mt-4 grid gap-3 rounded border border-gray-200 border-l-4 border-l-amarelo bg-white p-4 sm:grid-cols-2"
     >
-      <label className="text-sm">Registro * (alfanumérico)
-        <input
-          name="registro"
-          required
-          maxLength={30}
-          autoComplete="off"
-          defaultValue={v.registro ?? ""}
-          className={`${campo} sm:max-w-44`}
-        />
-      </label>
       <label className="text-sm">Nome *
         <input name="nome" required defaultValue={v.nome ?? ""} className={campo} />
       </label>
@@ -146,6 +136,16 @@ export function FormJovem(props: {
             <option key={o.id} value={o.id}>{o.rotulo}</option>
           ))}
         </select>
+      </label>
+      <label className="text-sm sm:col-span-2">Registro * (alfanumérico)
+        <input
+          name="registro"
+          required
+          maxLength={30}
+          autoComplete="off"
+          defaultValue={v.registro ?? ""}
+          className={campo}
+        />
       </label>
       <Data nome="dataregistro" rotulo="Data de registro" valor={v.dataregistro} />
       <Data nome="datanascimento" rotulo="Data de nascimento" valor={v.datanascimento} obrigatoria />

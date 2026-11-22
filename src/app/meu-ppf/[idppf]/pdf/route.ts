@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { carregarEu } from "@/lib/eu";
-import { agruparPorEtapa, carregarPpf, dataBR, STATUS_PPF } from "@/lib/ppf";
+import { agruparPorEtapa, carregarPpf, STATUS_PPF } from "@/lib/ppf";
+import { dataBR } from "@/lib/data";
 import { gerarPdf, type PdfBloco } from "@/lib/pdf";
 import { LOGO_PPF_BASE64, LOGO_PPF_ALTURA, LOGO_PPF_LARGURA } from "@/lib/logoPpf";
 

@@ -5,19 +5,12 @@ import { Shell } from "@/components/Shell";
 import { FormUsuario } from "@/components/FormUsuario";
 import { carregarEu } from "@/lib/eu";
 import { criarUsuario } from "./actions";
+import { dataBR } from "@/lib/data";
 
 export const instant = false;
 
 const campo = "rounded border border-gray-300 bg-white p-1.5 text-sm";
 const btn = "rounded bg-azul px-3 py-1.5 text-sm text-white hover:bg-azul-escuro";
-
-const dataBR = (iso: string) =>
-  new Intl.DateTimeFormat("pt-BR", {
-    timeZone: "America/Sao_Paulo",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(new Date(iso));
 
 export default async function Usuarios({
   searchParams,

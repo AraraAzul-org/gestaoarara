@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { carregarEu } from "@/lib/eu";
 import { Shell } from "@/components/Shell";
+import { dataBR, dataFiltro } from "@/lib/data";
+import { semAcento } from "@/lib/texto";
 
 export const instant = false;
 
@@ -14,17 +16,6 @@ const STATUS: Record<string, { rotulo: string; classe: string }> = {
   aberta: { rotulo: "Aberta", classe: "bg-green-100 text-green-800" },
   finalizada: { rotulo: "Finalizada", classe: "bg-blue-100 text-blue-800" },
 };
-
-const dataBR = (iso: string | null) => (iso ? iso.slice(0, 10).split("-").reverse().join("/") : "—");
-
-const semAcento = (texto: string) =>
-  texto
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-
-const dataValida = (valor?: string) =>
-  valor && /^\d{4}-\d{2}-\d{2}$/.test(valor) ? valor : null;
 
 type Avaliacao = {
   idavaliacao: number;
@@ -49,8 +40,8 @@ export default async function Resultados({
   const params = await searchParams;
   const { avaliacao: texto, de, ate } = params;
   const busca = (texto ?? "").trim();
-  const inicio = dataValida(de);
-  const fim = dataValida(ate);
+  const inicio = dataFiltro(de);
+  const fim = dataFiltro(ate);
 
   // A tela abre sem carregar avaliação nenhuma: só lista depois que a pessoa
   // pesquisa (nome e/ou período).

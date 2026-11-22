@@ -6,6 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { carregarEu } from "@/lib/eu";
 import { BUCKET_LENCOS } from "@/lib/lencos";
+import { dataISOValida } from "@/lib/data";
 
 const CAMPOS_OBRIGATORIOS = [
   ["grupoescoteiro", "Grupo escoteiro"],
@@ -43,8 +44,9 @@ function lerCampos(f: FormData) {
     if (!valor) voltar("erro", `Informe: ${rotulo}.`);
     dados[nome] = valor;
   }
+  if (dados.numero.length > 4) voltar("erro", "O número do lenço deve ter no máximo 4 caracteres.");
   if (dados.uf.length !== 2) voltar("erro", "Informe uma UF válida.");
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dados.data)) voltar("erro", "Informe uma data válida.");
+  if (!dataISOValida(dados.data)) voltar("erro", "Informe uma data válida.");
   dados.observacao = String(f.get("observacao") ?? "").trim();
   return dados;
 }

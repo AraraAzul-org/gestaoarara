@@ -4,18 +4,13 @@ import { createClient } from "@/lib/supabase/server";
 import { Shell } from "@/components/Shell";
 import { FormJovem } from "@/components/FormJovem";
 import { carregarEu } from "@/lib/eu";
-import { dataBR } from "@/lib/promessa";
+import { dataBR } from "@/lib/data";
+import { semAcento } from "@/lib/texto";
 import { criarJovem } from "./actions";
 
 export const instant = false;
 
 const campo = "rounded border border-gray-300 bg-white p-1.5 text-sm";
-
-const semAcento = (texto: string) =>
-  texto
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
 
 type Jovem = {
   idjovem: number;
@@ -36,6 +31,7 @@ export default async function Jovens({
     nome?: string;
     inativos?: string;
     buscar?: string;
+    ramo?: string;
   }>;
 }) {
   const supabase = await createClient();
@@ -47,6 +43,13 @@ export default async function Jovens({
   const { erro, ok } = params;
   const nomeBusca = (params.nome ?? "").trim();
   const mostrarInativos = params.inativos === "1" || params.inativos === "on";
+  // Dirigente escolhe o ramo; quem não é dirigente fica preso ao próprio ramo.
+  const ramoPedido = params.ramo ? Number(params.ramo) : null;
+  const ramoEscolhido = eu.dirigente
+    ? ramoPedido && Number.isInteger(ramoPedido)
+      ? ramoPedido
+      : null
+    : eu.idramo;
   // A lista só aparece depois que a pessoa clica em Pesquisar.
   const pesquisou = "buscar" in params;
 
@@ -58,6 +61,7 @@ export default async function Jovens({
   if (pesquisou) {
     let consulta = supabase.from("jovem").select("*").order("nome");
     if (!mostrarInativos) consulta = consulta.eq("ativo", true);
+    if (ramoEscolhido !== null) consulta = consulta.eq("idramo", ramoEscolhido);
     const j = await consulta;
     jovens = ((j.data ?? []) as Jovem[]).filter(
       (x) => !nomeBusca || semAcento(x.nome).includes(semAcento(nomeBusca)),
@@ -92,6 +96,17 @@ export default async function Jovens({
               className={campo}
             />
           </label>
+          {eu.dirigente && (
+            <label className="flex min-w-48 flex-col text-sm">
+              Ramo
+              <select name="ramo" defaultValue={ramoPedido ?? ""} className={campo}>
+                <option value="">Todos os ramos</option>
+                {ramos.map((x) => (
+                  <option key={x.idramo} value={x.idramo}>{x.nome}</option>
+                ))}
+              </select>
+            </label>
+          )}
           <label className="flex items-center gap-2 pb-1.5 text-sm text-gray-700">
             <input name="inativos" type="checkbox" value="1" defaultChecked={mostrarInativos} />
             Mostra Inativos

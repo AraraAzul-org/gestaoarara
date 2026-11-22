@@ -20,6 +20,39 @@ const btn =
 const btnNeutro =
   "rounded border border-azul px-3 py-1.5 text-sm font-medium text-azul hover:bg-azul/10 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400";
 
+function Aviso({ tipo, texto }: { tipo: "ok" | "erro"; texto: string }) {
+  const [visivel, setVisivel] = useState(true);
+
+  // Some sozinho; as respostas permanecem na tela.
+  useEffect(() => {
+    const t = setTimeout(() => setVisivel(false), 8000);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (!visivel) return null;
+
+  return (
+    <div
+      role="status"
+      className={`fixed right-4 top-24 z-50 max-w-sm rounded border p-3 text-sm shadow-lg ${
+        tipo === "ok" ? "border-green-300 bg-green-50 text-green-800" : "border-red-300 bg-red-50 text-red-700"
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        <p className="flex-1">{texto}</p>
+        <button
+          type="button"
+          onClick={() => setVisivel(false)}
+          aria-label="Fechar aviso"
+          className="text-gray-500 hover:text-gray-800"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function FormAvaliacao({
   idavaliacao,
   idusuario,
@@ -47,23 +80,17 @@ export function FormAvaliacao({
   });
 
   const [estado, acao, pendente] = useActionState<EstadoRespostas, FormData>(salvarRespostas, {});
-  const [aviso, setAviso] = useState<{ tipo: "ok" | "erro"; texto: string } | null>(null);
   const router = useRouter();
+
+  const aviso: { tipo: "ok" | "erro"; texto: string } | null =
+    estado.ok || estado.erro
+      ? { tipo: estado.ok ? "ok" : "erro", texto: (estado.ok ?? estado.erro) as string }
+      : null;
 
   // Depois de salvar, atualiza os contadores da página sem sair da tela.
   useEffect(() => {
     if (estado.ok) router.refresh();
-    if (estado.ok || estado.erro) {
-      setAviso({ tipo: estado.ok ? "ok" : "erro", texto: (estado.ok ?? estado.erro) as string });
-    }
   }, [estado, router]);
-
-  // O aviso some sozinho, mas as respostas permanecem na tela.
-  useEffect(() => {
-    if (!aviso) return;
-    const t = setTimeout(() => setAviso(null), 8000);
-    return () => clearTimeout(t);
-  }, [aviso]);
 
   const mudar = (idpergunta: number, valor: string) =>
     setValores((atual) => ({ ...atual, [idpergunta]: valor }));
@@ -163,26 +190,7 @@ export function FormAvaliacao({
         </div>
       )}
 
-      {aviso && (
-        <div
-          role="status"
-          className={`fixed right-4 top-24 z-50 max-w-sm rounded border p-3 text-sm shadow-lg ${
-            aviso.tipo === "ok" ? "border-green-300 bg-green-50 text-green-800" : "border-red-300 bg-red-50 text-red-700"
-          }`}
-        >
-          <div className="flex items-start gap-3">
-            <p className="flex-1">{aviso.texto}</p>
-            <button
-              type="button"
-              onClick={() => setAviso(null)}
-              aria-label="Fechar aviso"
-              className="text-gray-500 hover:text-gray-800"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      )}
+      {aviso && <Aviso key={aviso.texto} tipo={aviso.tipo} texto={aviso.texto} />}
     </form>
   );
 }

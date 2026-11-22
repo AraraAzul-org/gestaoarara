@@ -12,22 +12,30 @@ function CampoTexto({
   valor,
   obrigatorio = true,
   extenso = false,
+  tipo = "text",
+  maxLength,
+  compacto = false,
 }: {
   nome: string;
   titulo: string;
   valor?: string | null;
   obrigatorio?: boolean;
   extenso?: boolean;
+  tipo?: "text" | "date";
+  maxLength?: number;
+  compacto?: boolean;
 }) {
   return (
-    <label className="flex min-w-48 flex-1 flex-col gap-1">
+    <label className={`flex flex-col gap-1 ${compacto ? "w-24" : "min-w-48 flex-1"}`}>
       <span className={rotulo}>{titulo}</span>
       {extenso ? (
         <textarea name={nome} rows={3} defaultValue={valor ?? ""} className={campo} />
       ) : (
         <input
           name={nome}
+          type={tipo}
           required={obrigatorio}
+          maxLength={maxLength}
           autoComplete="off"
           defaultValue={valor ?? ""}
           className={campo}
@@ -55,21 +63,29 @@ export function FormLenco({
       <input type="hidden" name="fotoentregaatual" value={valores?.fotoentrega ?? ""} />
 
       <CampoTexto nome="grupoescoteiro" titulo="Grupo escoteiro" valor={valores?.grupoescoteiro} />
-      <CampoTexto nome="numero" titulo="Número do lenço" valor={valores?.numero} />
 
-      <label className="flex min-w-48 flex-1 flex-col gap-1">
-        <span className={rotulo}>UF</span>
-        <select name="uf" required defaultValue={valores?.uf ?? ""} className={campo}>
-          <option value="">Selecione</option>
-          {UFS.map((uf) => (
-            <option key={uf} value={uf}>
-              {uf}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="flex gap-3">
+        <CampoTexto
+          nome="numero"
+          titulo="Número do lenço"
+          valor={valores?.numero}
+          maxLength={4}
+          compacto
+        />
+        <label className="flex w-24 flex-col gap-1">
+          <span className={rotulo}>UF</span>
+          <select name="uf" required defaultValue={valores?.uf ?? ""} className={campo}>
+            <option value="">Selecione</option>
+            {UFS.map((uf) => (
+              <option key={uf} value={uf}>
+                {uf}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
 
-      <CampoTexto nome="data" titulo="Data" valor={valores?.data?.slice(0, 10)} />
+      <CampoTexto nome="data" titulo="Data" valor={valores?.data?.slice(0, 10)} tipo="date" />
 
       <CampoTexto nome="nomeescoteiro" titulo="Nome do escoteiro" valor={valores?.nomeescoteiro} />
       <CampoTexto

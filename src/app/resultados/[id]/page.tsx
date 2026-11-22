@@ -5,6 +5,7 @@ import { Shell } from "@/components/Shell";
 import { Voltar } from "@/components/Voltar";
 import { GraficoRadar, type EixoRadar, type SerieRadar } from "@/components/GraficoRadar";
 import { carregarNotasEtapas, formatarNota } from "@/lib/notas";
+import { dataBR } from "@/lib/data";
 
 export const instant = false;
 
@@ -34,8 +35,6 @@ const STATUS_AVALIACAO: Record<string, { rotulo: string; classe: string }> = {
   aberta: { rotulo: "Aberta", classe: "bg-green-100 text-green-800" },
   finalizada: { rotulo: "Finalizada", classe: "bg-blue-100 text-blue-800" },
 };
-
-const dataBR = (iso: string | null) => (iso ? iso.slice(0, 10).split("-").reverse().join("/") : "—");
 
 const codigoEtapa = (descricao: string) => {
   const achado = descricao.match(/^\s*(\d{1,2})\s*[-–—.]/);

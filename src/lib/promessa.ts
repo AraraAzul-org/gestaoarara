@@ -1,3 +1,7 @@
+import { hojeBR } from "./data";
+
+export { hojeBR };
+
 // Datas de promessa são dias civis; por isso as contas usam o dia de hoje
 // no horário de Brasília, e não o dia em UTC do servidor.
 export const MESES = [
@@ -14,15 +18,6 @@ export const MESES = [
   "Novembro",
   "Dezembro",
 ];
-
-export function hojeBR(): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Sao_Paulo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
-}
 
 export function mesAtualBR(): number {
   return Number(hojeBR().slice(5, 7));
@@ -72,12 +67,4 @@ export function anosPromessa(
 ): number | null {
   if (!datapromessa) return null;
   return anosCompletos(String(datapromessa).slice(0, 10), fimMesAtualBR(), deducao);
-}
-
-/** Data no formato brasileiro a partir de um ISO (aaaa-mm-dd). */
-export function dataBR(iso?: string | null): string {
-  if (!iso) return "—";
-  const [ano, mes, dia] = String(iso).slice(0, 10).split("-");
-  if (!ano || !mes || !dia) return "—";
-  return `${dia}/${mes}/${ano}`;
 }

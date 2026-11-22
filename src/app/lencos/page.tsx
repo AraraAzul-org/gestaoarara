@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { carregarEu } from "@/lib/eu";
 import { Shell } from "@/components/Shell";
 import { GraficoDistribuicao } from "@/components/GraficoDistribuicao";
-import { comFotosAssinadas, dataBR, type Lenco, type LencoComFotos } from "@/lib/lencos";
+import { comFotosAssinadas, type Lenco, type LencoComFotos } from "@/lib/lencos";
+import { dataBR } from "@/lib/data";
 
 export const instant = false;
 
@@ -21,7 +22,6 @@ export default async function Lencos({
 
   const params = await searchParams;
   const uf = (params.uf ?? "").trim().slice(0, 2).toUpperCase();
-  const podeCadastrar = eu.acessos.has("lencoscadastro");
 
   const { data } = await supabase
     .from("lenco")
@@ -46,21 +46,11 @@ export default async function Lencos({
   return (
     <Shell>
       <main className="w-full p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-semibold text-azul">Lenços</h1>
-            <p className="mt-1 text-sm text-gray-600">
-              Registro dos lenços trocados. Clique em uma UF no gráfico para filtrar a listagem.
-            </p>
-          </div>
-          {podeCadastrar && (
-            <Link
-              href="/lencos/cadastro"
-              className="rounded bg-azul px-3 py-1.5 text-sm font-medium text-white hover:bg-azul-escuro"
-            >
-              Cadastrar lenço
-            </Link>
-          )}
+        <div>
+          <h1 className="text-xl font-semibold text-azul">Lenços</h1>
+          <p className="mt-1 text-sm text-gray-600">
+            Registro dos lenços trocados. Clique em uma UF no gráfico para filtrar a listagem.
+          </p>
         </div>
 
         {params.erro && (

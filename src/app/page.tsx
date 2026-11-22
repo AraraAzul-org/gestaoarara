@@ -5,7 +5,8 @@ import { primeiraRota } from "@/lib/menu";
 import { Shell } from "@/components/Shell";
 import { GraficoDistribuicao, type ItemDistribuicao } from "@/components/GraficoDistribuicao";
 import { tempoDesde } from "@/lib/tempo";
-import { anosPromessa, dataBR, fimMesAtualBR, MESES, mesAtualBR } from "@/lib/promessa";
+import { anosPromessa, fimMesAtualBR, MESES, mesAtualBR } from "@/lib/promessa";
+import { dataBR } from "@/lib/data";
 import { calcularJovem } from "@/lib/jovem";
 
 export const instant = false;

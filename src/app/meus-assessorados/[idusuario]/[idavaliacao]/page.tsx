@@ -6,11 +6,9 @@ import { Voltar } from "@/components/Voltar";
 import { FormAvaliacao } from "@/components/FormAvaliacao";
 import { SecaoRespostas } from "@/components/SecaoRespostas";
 import { carregarNotas, chaveNota, formatarNota } from "@/lib/notas";
+import { dataBR, hojeBR } from "@/lib/data";
 
 export const instant = false;
-
-const hojeSP = () => new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
-const dataBR = (iso: string) => iso.slice(0, 10).split("-").reverse().join("/");
 
 const SELOS: Record<string, { rotulo: string; classe: string }> = {
   concluida: { rotulo: "APF concluído", classe: "bg-green-100 text-green-800" },
@@ -138,10 +136,10 @@ export default async function RespostasDoAssessorado({
     }),
   );
 
-  const aberta = av.status === "aberta" && av.prazo.slice(0, 10) >= hojeSP();
+  const aberta = av.status === "aberta" && av.prazo.slice(0, 10) >= hojeBR();
   const concluido = au.concluiapf != null;
   const somenteLeitura = concluido || !aberta;
-  const vencida = !concluido && av.prazo.slice(0, 10) < hojeSP();
+  const vencida = !concluido && av.prazo.slice(0, 10) < hojeBR();
   const chave = concluido
     ? "concluida"
     : vencida

@@ -4,10 +4,9 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { carregarEu } from "@/lib/eu";
+import { dataOpcionalValida } from "@/lib/data";
 
 const MAX_TEXTO = 2000;
-
-const dataValida = (valor: string) => !valor || /^\d{4}-\d{2}-\d{2}$/.test(valor);
 
 async function exigirDono(f: FormData) {
   const supabase = await createClient();
@@ -52,7 +51,7 @@ export async function salvarItens(f: FormData) {
     const data = String(f.get(`data_${id}`) ?? "").trim();
 
     if (acao.length > MAX_TEXTO) voltar(idppf, "erro", "A ação pode ter no máximo 2.000 caracteres.");
-    if (!dataValida(data)) voltar(idppf, "erro", "Informe uma data prevista válida.");
+    if (!dataOpcionalValida(data)) voltar(idppf, "erro", "Informe uma data prevista válida.");
 
     const { error } = await supabase
       .from("ppfitem")
@@ -75,7 +74,7 @@ export async function adicionarItem(f: FormData) {
 
   if (!descricao) voltar(idppf, "erro", "Descreva o item que será incluído no PPF.");
   if (descricao.length > MAX_TEXTO) voltar(idppf, "erro", "A descrição pode ter no máximo 2.000 caracteres.");
-  if (!dataValida(data)) voltar(idppf, "erro", "Informe uma data prevista válida.");
+  if (!dataOpcionalValida(data)) voltar(idppf, "erro", "Informe uma data prevista válida.");
 
   const { data: ultimo } = await supabase
     .from("ppfitem")
@@ -129,7 +128,7 @@ export async function editarItem(f: FormData) {
   const data = String(f.get("dataprevista") ?? "").trim();
   if (!descricao) voltar(idppf, "erro", "Descreva o item.");
   if (descricao.length > MAX_TEXTO) voltar(idppf, "erro", "A descrição pode ter no máximo 2.000 caracteres.");
-  if (!dataValida(data)) voltar(idppf, "erro", "Informe uma data prevista válida.");
+  if (!dataOpcionalValida(data)) voltar(idppf, "erro", "Informe uma data prevista válida.");
 
   const { error } = await supabase
     .from("ppfitem")

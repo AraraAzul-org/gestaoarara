@@ -6,7 +6,8 @@ import { carregarEu } from "@/lib/eu";
 import { Shell } from "@/components/Shell";
 import { Voltar } from "@/components/Voltar";
 import { FormLenco } from "@/components/FormLenco";
-import { comFotosAssinadas, dataBR, type Lenco } from "@/lib/lencos";
+import { comFotosAssinadas, type Lenco } from "@/lib/lencos";
+import { dataBR } from "@/lib/data";
 import { atualizarLenco, excluirLenco } from "../actions";
 
 export const instant = false;

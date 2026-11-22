@@ -6,10 +6,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { carregarEu } from "@/lib/eu";
 import { ehNivel, ROTULO_NIVEL, type Nivel } from "@/lib/niveis";
+import { hojeBR } from "@/lib/data";
 
 export type EstadoRespostas = { ok?: string; erro?: string };
-
-const hojeSP = () => new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
 
 async function exigirCadastro() {
   const supabase = await createClient();
@@ -166,7 +165,7 @@ export async function salvarRespostas(_anterior: EstadoRespostas, f: FormData): 
   if (nivel === "apf" && au.concluiapf) return { erro: "A etapa do APF já foi concluída." };
   if (nivel === "diretor" && au.concluirdiretor) return { erro: "O parecer da direção já foi concluído." };
 
-  if (av.status !== "aberta" || av.prazo < hojeSP())
+  if (av.status !== "aberta" || av.prazo < hojeBR())
     return { erro: "O prazo desta avaliação terminou; não é mais possível responder." };
 
   const gravou = await gravar(supabase, id, idusuario, av.idquestionario, nivel, f);

@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { carregarEu } from "@/lib/eu";
 import { Shell } from "@/components/Shell";
-import { STATUS_PPF, dataBR } from "@/lib/ppf";
+import { STATUS_PPF } from "@/lib/ppf";
+import { dataBR } from "@/lib/data";
 
 export const instant = false;
 

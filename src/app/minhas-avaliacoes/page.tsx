@@ -4,18 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { carregarEu } from "@/lib/eu";
 import { Shell } from "@/components/Shell";
 import { carregarNotas, chaveNota, formatarNota } from "@/lib/notas";
+import { dataBR, diasAte, hojeBR } from "@/lib/data";
 
 export const instant = false;
-
-const hojeSP = () => new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
-
-const dataBR = (iso: string) => iso.slice(0, 10).split("-").reverse().join("/");
-
-function diasAte(prazo: string) {
-  const hoje = new Date(`${hojeSP()}T00:00:00Z`).getTime();
-  const fim = new Date(`${prazo.slice(0, 10)}T00:00:00Z`).getTime();
-  return Math.round((fim - hoje) / 86_400_000);
-}
 
 type Selo = { rotulo: string; classe: string };
 
@@ -130,7 +121,7 @@ export default async function MinhasAvaliacoes() {
           const av = m.avaliacao;
           const total = totalPorQuestionario.get(av.idquestionario) ?? 0;
           const feitas = respondidas.get(av.idavaliacao) ?? 0;
-          const vencida = m.status !== "concluida" && av.prazo.slice(0, 10) < hojeSP();
+          const vencida = m.status !== "concluida" && av.prazo.slice(0, 10) < hojeBR();
           const chave = vencida ? "vencida" : m.status === "concluida" ? "concluida" : m.status;
           const selo = SELOS[chave] ?? SELOS.pendente;
           const pct = total ? Math.round((feitas / total) * 100) : 0;

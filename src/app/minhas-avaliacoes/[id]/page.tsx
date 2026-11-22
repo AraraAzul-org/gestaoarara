@@ -5,11 +5,9 @@ import { Shell } from "@/components/Shell";
 import { Voltar } from "@/components/Voltar";
 import { FormAvaliacao } from "@/components/FormAvaliacao";
 import { carregarNotas, chaveNota, formatarNota } from "@/lib/notas";
+import { dataBR, hojeBR } from "@/lib/data";
 
 export const instant = false;
-
-const hojeSP = () => new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
-const dataBR = (iso: string) => iso.slice(0, 10).split("-").reverse().join("/");
 
 export default async function ResponderAvaliacao({
   params,
@@ -80,7 +78,7 @@ export default async function ResponderAvaliacao({
   const respostaDa = new Map((respostasData ?? []).map((r) => [r.idpergunta, r]));
 
   const concluida = au.status === "concluida";
-  const vencida = av.prazo.slice(0, 10) < hojeSP();
+  const vencida = av.prazo.slice(0, 10) < hojeBR();
   const somenteLeitura = concluida || av.status !== "aberta" || vencida;
 
   const total = perguntas.length;

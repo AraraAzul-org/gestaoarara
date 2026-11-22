@@ -3,8 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { carregarEu } from "@/lib/eu";
 import { Shell } from "@/components/Shell";
 import { SeletorMes } from "@/components/SeletorMes";
-import { anosPromessa, dataBR, fimMesAtualBR, MESES, mesAtualBR } from "@/lib/promessa";
+import { anosPromessa, fimMesAtualBR, MESES, mesAtualBR } from "@/lib/promessa";
 import { calcularJovem, dataPromessaOuAcolhida, RAMO_JOVEM } from "@/lib/jovem";
+import { dataBR } from "@/lib/data";
+import { tempoDesde } from "@/lib/tempo";
 
 export const instant = false;
 
@@ -15,6 +17,7 @@ type Adulto = {
   idramo: number | null;
   datapromessa: string | null;
   deducaopromessa: number | null;
+  datasituacao: string | null;
 };
 
 type JovemLinha = {
@@ -22,6 +25,7 @@ type JovemLinha = {
   nome: string;
   registro: string | null;
   idramo: number | null;
+  dataregistro: string | null;
   dataacolhida: string | null;
   datapassagemlobinho: string | null;
   datapromessalobinho: string | null;
@@ -54,6 +58,7 @@ type SemPromessa = {
   registro: string | null;
   idramo: number | null;
   situacao: string;
+  dataRegistro: string | null;
 };
 
 const mesDaData = (iso: string | null) => (iso ? Number(String(iso).slice(5, 7)) : null);
@@ -89,13 +94,13 @@ export default async function Promessas({
   const [adultosBruto, jovensBruto, ramos] = await Promise.all([
     supabase
       .from("usuario")
-      .select("idusuario, nome, registro, idramo, datapromessa, deducaopromessa")
+      .select("idusuario, nome, registro, idramo, datapromessa, deducaopromessa, datasituacao")
       .eq("ativo", true)
       .eq("membrogrupo", true),
     supabase
       .from("jovem")
       .select(
-        "idjovem, nome, registro, idramo, dataacolhida, datapassagemlobinho, datapromessalobinho, deducaolobinho, datapassagemescoteiro, datapromessaescoteiro, deducaoescoteiro, datapassagemsenior, datapromessasenior, deducaosenior, datapassagempioneiro, datapromessapioneiro, deducaopioneiro",
+        "idjovem, nome, registro, idramo, dataregistro, dataacolhida, datapassagemlobinho, datapromessalobinho, deducaolobinho, datapassagemescoteiro, datapromessaescoteiro, deducaoescoteiro, datapassagemsenior, datapromessasenior, deducaosenior, datapassagempioneiro, datapromessapioneiro, deducaopioneiro",
       )
       .eq("ativo", true),
     supabase.from("ramo").select("idramo, nome").order("nome"),
@@ -155,6 +160,7 @@ export default async function Promessas({
         registro: a.registro,
         idramo: a.idramo,
         situacao: "Sem promessa",
+        dataRegistro: a.datasituacao,
       })),
     ...jovens
       .filter((j) => eu.idramo !== null && j.idramo === eu.idramo && !dataPromessaOuAcolhida(j))
@@ -164,6 +170,7 @@ export default async function Promessas({
         registro: j.registro,
         idramo: j.idramo,
         situacao: j.idramo === RAMO_JOVEM.filhotes ? "Sem acolhida" : "Sem promessa",
+        dataRegistro: j.dataregistro,
       })),
   ].sort(ordenarPorNome);
 
@@ -270,6 +277,8 @@ export default async function Promessas({
                     <th className="px-4 py-2 font-medium">Tipo</th>
                     <th className="px-4 py-2 font-medium">Ramo</th>
                     <th className="px-4 py-2 font-medium">Registro</th>
+                    <th className="px-4 py-2 font-medium">Data do registro</th>
+                    <th className="px-4 py-2 font-medium">Tempo até hoje</th>
                     <th className="px-4 py-2 font-medium">Situação</th>
                   </tr>
                 </thead>
@@ -280,6 +289,8 @@ export default async function Promessas({
                       <td className="whitespace-nowrap px-4 py-2 text-gray-600">{p.tipo}</td>
                       <td className="px-4 py-2">{p.idramo === null ? "—" : nomeRamo.get(p.idramo) ?? "—"}</td>
                       <td className="whitespace-nowrap px-4 py-2 text-gray-600">{p.registro ?? "—"}</td>
+                      <td className="whitespace-nowrap px-4 py-2 text-gray-600">{dataBR(p.dataRegistro)}</td>
+                      <td className="whitespace-nowrap px-4 py-2 text-gray-700">{tempoDesde(p.dataRegistro)}</td>
                       <td className="whitespace-nowrap px-4 py-2 text-amber-700">{p.situacao}</td>
                     </tr>
                   ))}

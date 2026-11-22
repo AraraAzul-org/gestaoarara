@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { carregarEu } from "@/lib/eu";
-import { CADASTROS } from "@/lib/cadastros";
+import { CADASTROS, type CampoCadastro } from "@/lib/cadastros";
 import { Shell } from "@/components/Shell";
 import { excluirSimples, salvarSimples } from "@/app/cadastros/actions";
 
@@ -13,33 +13,18 @@ const btn =
 const iconBtn =
   "inline-flex h-8 w-8 cursor-pointer list-none items-center justify-center rounded text-gray-400 hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 [&::-webkit-details-marker]:hidden";
 
-export async function CadastroSimples({
-  tabela,
-  searchParams,
+function Campos({
+  campos,
+  valores,
+  comRotulo = false,
 }: {
-  tabela: keyof typeof CADASTROS;
-  searchParams: Promise<{ ok?: string; erro?: string }>;
+  campos: CampoCadastro[];
+  valores?: Record<string, string | number | boolean>;
+  comRotulo?: boolean;
 }) {
-  const cfg = CADASTROS[tabela];
-  const supabase = await createClient();
-  const eu = await carregarEu(supabase);
-  if (!eu) redirect("/login");
-  if (!eu.acessos.has(cfg.chaveMenu)) redirect("/");
-
-  const { ok, erro } = await searchParams;
-  const { data } = await supabase.from(tabela).select("*").order(cfg.chave);
-  const linhas = (data ?? []) as Record<string, string | number | boolean>[];
-  const campoNome = cfg.campos.find((c) => c.tipo === "texto")?.nome ?? cfg.chave;
-
-  const Campos = ({
-    valores,
-    comRotulo = false,
-  }: {
-    valores?: Record<string, string | number | boolean>;
-    comRotulo?: boolean;
-  }) => (
+  return (
     <>
-      {cfg.campos.map((c) =>
+      {campos.map((c) =>
         c.tipo === "bool" ? (
           <label key={c.nome} className="flex items-center gap-2 self-end pb-1.5 text-sm text-gray-700">
             <input
@@ -65,6 +50,25 @@ export async function CadastroSimples({
       )}
     </>
   );
+}
+
+export async function CadastroSimples({
+  tabela,
+  searchParams,
+}: {
+  tabela: keyof typeof CADASTROS;
+  searchParams: Promise<{ ok?: string; erro?: string }>;
+}) {
+  const cfg = CADASTROS[tabela];
+  const supabase = await createClient();
+  const eu = await carregarEu(supabase);
+  if (!eu) redirect("/login");
+  if (!eu.acessos.has(cfg.chaveMenu)) redirect("/");
+
+  const { ok, erro } = await searchParams;
+  const { data } = await supabase.from(tabela).select("*").order(cfg.chave);
+  const linhas = (data ?? []) as Record<string, string | number | boolean>[];
+  const campoNome = cfg.campos.find((c) => c.tipo === "texto")?.nome ?? cfg.chave;
 
   return (
     <Shell>
@@ -87,7 +91,7 @@ export async function CadastroSimples({
           className="mt-5 flex flex-wrap items-end gap-2 rounded-lg border border-gray-200 border-l-4 border-l-amarelo bg-white p-4 shadow-sm"
         >
           <input type="hidden" name="tabela" value={tabela} />
-          <Campos comRotulo />
+          <Campos campos={cfg.campos} comRotulo />
           <button className={btn}>Adicionar</button>
         </form>
 
@@ -103,7 +107,7 @@ export async function CadastroSimples({
               <form action={salvarSimples} className="flex min-w-0 flex-1 flex-wrap items-end gap-2">
                 <input type="hidden" name="tabela" value={tabela} />
                 <input type="hidden" name="id" value={String(l[cfg.chave])} />
-                <Campos valores={l} />
+                <Campos campos={cfg.campos} valores={l} />
                 <button className={`${btn} acoes-linha`}>Salvar</button>
               </form>
               <details className="relative">

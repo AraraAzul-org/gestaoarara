@@ -3,11 +3,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { carregarEu } from "@/lib/eu";
 import { Shell } from "@/components/Shell";
+import { dataBR, hojeBR } from "@/lib/data";
 
 export const instant = false;
-
-const hojeSP = () => new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
-const dataBR = (iso: string) => iso.slice(0, 10).split("-").reverse().join("/");
 
 type Cargo = { descricao: string };
 type Pessoa = { idusuario: number; nome: string; linha: string; cargo: Cargo | Cargo[] | null };
@@ -124,7 +122,7 @@ export default async function Parecer() {
           const lista = (porAvaliacao.get(av.idavaliacao) ?? []).sort((a, b) =>
             a.usuario.nome.localeCompare(b.usuario.nome, "pt-BR"),
           );
-          const vencida = av.prazo.slice(0, 10) < hojeSP();
+          const vencida = av.prazo.slice(0, 10) < hojeBR();
           const situacao = av.status === "finalizada" ? "Finalizada" : vencida ? "Prazo vencido" : "Aberta";
 
           return (

@@ -92,6 +92,3 @@ export function agruparPorEtapa(itens: PpfItem[]) {
     });
   return grupos;
 }
-
-export const dataBR = (iso: string | null) =>
-  iso ? iso.slice(0, 10).split("-").reverse().join("/") : "—";

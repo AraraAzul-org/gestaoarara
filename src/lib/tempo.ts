@@ -1,13 +1,7 @@
+import { hojeBR } from "./data";
+
 // Datas de situação são dias civis; por isso a comparação usa o dia de hoje
 // no horário de Brasília, e não o dia em UTC do servidor.
-function hojeBR(): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Sao_Paulo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
-}
 
 function diferenca(inicio: string, fim: string): string | null {
   const [anoIni, mesIni, diaIni] = inicio.split("-").map(Number);

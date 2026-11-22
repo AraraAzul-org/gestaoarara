@@ -4,10 +4,9 @@ import { carregarEu } from "@/lib/eu";
 import { Shell } from "@/components/Shell";
 import { Voltar } from "@/components/Voltar";
 import { SelecionarUsuarios, type UsuarioSelecao } from "@/components/SelecionarUsuarios";
+import { dataBR } from "@/lib/data";
 
 export const instant = false;
-
-const dataBR = (iso: string) => iso.slice(0, 10).split("-").reverse().join("/");
 
 type UsuarioBruto = {
   idusuario: number;

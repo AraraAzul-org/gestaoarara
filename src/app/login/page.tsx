@@ -3,9 +3,11 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function Login() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [msg, setMsg] = useState("");
@@ -43,7 +45,7 @@ export default function Login() {
       setMsg("Usuário inativo. Procure a diretoria do grupo.");
       return;
     }
-    location.assign("/");
+    router.push("/");
   }
 
   return (

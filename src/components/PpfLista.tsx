@@ -1,4 +1,5 @@
-import { dataBR, type PpfItem } from "@/lib/ppf";
+import { type PpfItem } from "@/lib/ppf";
+import { dataBR } from "@/lib/data";
 
 const campo = "mt-1 w-full rounded border border-gray-300 p-1.5 text-sm";
 

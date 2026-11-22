@@ -6,6 +6,7 @@ import { Shell } from "@/components/Shell";
 import { ConfirmarExclusao } from "@/components/ConfirmarExclusao";
 import { ConfirmarCancelamento } from "@/components/ConfirmarCancelamento";
 import { salvarAvaliacao, alternarPpf } from "./actions";
+import { dataBR } from "@/lib/data";
 
 export const instant = false;
 
@@ -18,7 +19,58 @@ const STATUS: Record<string, { rotulo: string; classe: string }> = {
   finalizada: { rotulo: "Finalizada", classe: "text-azul" },
 };
 
-const dataBR = (iso: string) => iso.split("-").reverse().join("/");
+type QuestionarioOpcao = { idquestionario: number; descricao: string; ativo: boolean };
+type AvaliacaoCampos = {
+  descricao: string;
+  prazo: string;
+  idquestionario: number;
+  gerarppf: boolean;
+};
+
+function Campos({
+  valores,
+  questionarios,
+}: {
+  valores?: AvaliacaoCampos;
+  questionarios: QuestionarioOpcao[];
+}) {
+  return (
+    <>
+      <label className="flex flex-col gap-1 sm:col-span-2">
+        <span className="text-gray-600">Descrição</span>
+        <input
+          name="descricao"
+          required
+          placeholder="Ex.: Avaliação de desempenho 2026"
+          defaultValue={valores?.descricao ?? ""}
+          className={campo}
+        />
+      </label>
+      <label className="flex flex-col gap-1">
+        <span className="text-gray-600">Questionário</span>
+        <select name="idquestionario" required defaultValue={valores ? String(valores.idquestionario) : ""} className={campo}>
+          <option value="" disabled>
+            Escolha o questionário
+          </option>
+          {questionarios.map((x) => (
+            <option key={x.idquestionario} value={x.idquestionario}>
+              {x.descricao}
+              {x.ativo ? "" : " (inativo)"}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="flex flex-col gap-1">
+        <span className="text-gray-600">Prazo</span>
+        <input name="prazo" type="date" required defaultValue={valores?.prazo ?? ""} className={campo} />
+      </label>
+      <label className="flex items-center gap-2 text-sm sm:col-span-2">
+        <input name="gerarppf" type="checkbox" defaultChecked={valores?.gerarppf ?? false} />
+        Gerar PPF (Plano Pessoal de Formação) quando o APF concluir a avaliação
+      </label>
+    </>
+  );
+}
 
 export default async function Avaliacoes({
   searchParams,
@@ -61,43 +113,6 @@ export default async function Avaliacoes({
     if (qid != null) perguntasPorQuestionario.set(qid, (perguntasPorQuestionario.get(qid) ?? 0) + 1);
   });
 
-  const Campos = ({ valores }: { valores?: typeof avaliacoes[number] }) => (
-    <>
-      <label className="flex flex-col gap-1 sm:col-span-2">
-        <span className="text-gray-600">Descrição</span>
-        <input
-          name="descricao"
-          required
-          placeholder="Ex.: Avaliação de desempenho 2026"
-          defaultValue={valores?.descricao ?? ""}
-          className={campo}
-        />
-      </label>
-      <label className="flex flex-col gap-1">
-        <span className="text-gray-600">Questionário</span>
-        <select name="idquestionario" required defaultValue={valores ? String(valores.idquestionario) : ""} className={campo}>
-          <option value="" disabled>
-            Escolha o questionário
-          </option>
-          {questionarios.map((x) => (
-            <option key={x.idquestionario} value={x.idquestionario}>
-              {x.descricao}
-              {x.ativo ? "" : " (inativo)"}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="flex flex-col gap-1">
-        <span className="text-gray-600">Prazo</span>
-        <input name="prazo" type="date" required defaultValue={valores?.prazo ?? ""} className={campo} />
-      </label>
-      <label className="flex items-center gap-2 text-sm sm:col-span-2">
-        <input name="gerarppf" type="checkbox" defaultChecked={valores?.gerarppf ?? false} />
-        Gerar PPF (Plano Pessoal de Formação) quando o APF concluir a avaliação
-      </label>
-    </>
-  );
-
   return (
     <Shell>
       <main className="max-w-4xl p-4">
@@ -121,7 +136,7 @@ export default async function Avaliacoes({
             </p>
           ) : (
             <form action={salvarAvaliacao} className="mt-3 grid gap-2 sm:grid-cols-2">
-              <Campos />
+              <Campos questionarios={questionarios} />
               <div className="sm:col-span-2">
                 <button className={btn}>Criar avaliação</button>
               </div>
@@ -148,7 +163,7 @@ export default async function Avaliacoes({
                     <summary className="cursor-pointer text-white underline">Editar</summary>
                     <form action={salvarAvaliacao} className="mt-1 grid gap-2 rounded bg-white p-2 sm:grid-cols-2">
                       <input type="hidden" name="idavaliacao" value={av.idavaliacao} />
-                      <Campos valores={av} />
+                      <Campos valores={av} questionarios={questionarios} />
                       <div className="sm:col-span-2">
                         <button className={btn}>Salvar</button>
                       </div>

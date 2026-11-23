@@ -167,6 +167,74 @@ jobs:
           sys.exit(1 if falhou else 0)
           PY
 
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import pathlib
+          import sys
+
+          manifest = json.load(open("restore/manifest.json", encoding="utf-8"))
+          extra = json.load(open("restore/extra.json", encoding="utf-8"))
+          falhou = False
+          print("### Verificação de Storage, Edge Functions e Auth")
+
+          if extra.get("storage") != manifest.get("storage"):
+              print("DIVERGENTE storage: manifest != extra")
+              falhou = True
+          if extra.get("functions") != manifest.get("functions"):
+              print("DIVERGENTE functions: manifest != extra")
+              falhou = True
+          if extra.get("auth_config") != manifest.get("auth_config"):
+              print("DIVERGENTE auth_config: manifest != extra")
+              falhou = True
+
+          def sha(caminho):
+              return hashlib.sha256(pathlib.Path(caminho).read_bytes()).hexdigest()
+
+          for chave, info in extra["storage"].items():
+              caminho = pathlib.Path("restore/storage") / chave
+              if not caminho.is_file():
+                  print(f"FALTANDO storage: {chave}")
+                  falhou = True
+                  continue
+              ok = sha(caminho) == info["sha256"] and caminho.stat().st_size == info["size"]
+              print(f"{'OK' if ok else 'DIVERGENTE':11} storage {chave}: {info['size']} bytes")
+              if not ok:
+                  falhou = True
+
+          for slug, info in extra["functions"].items():
+              pasta = pathlib.Path("restore/functions") / slug
+              for nome, esperado in info["sha256"].items():
+                  caminho = pasta / nome
+                  if not caminho.is_file():
+                      print(f"FALTANDO function {slug}: {nome}")
+                      falhou = True
+                      continue
+                  ok = sha(caminho) == esperado
+                  print(f"{'OK' if ok else 'DIVERGENTE':11} function {slug}/{nome}")
+                  if not ok:
+                      falhou = True
+              meta = pasta / "metadata.json"
+              if not meta.is_file() or sha(meta) != info["metadata_sha256"]:
+                  print(f"DIVERGENTE function {slug}/metadata.json")
+                  falhou = True
+              else:
+                  print(f"OK          function {slug}/metadata.json")
+
+          caminho = pathlib.Path("restore/auth-config.json")
+          if not caminho.is_file() or sha(caminho) != extra["auth_config"]["sha256"]:
+              print("DIVERGENTE auth-config.json")
+              falhou = True
+          else:
+              print("OK          auth-config.json")
+
+          if len(extra["storage"]) != manifest["contagens"]["storage.objects"]:
+              print("DIVERGENTE storage.objects: manifest vs arquivos")
+              falhou = True
+
+          sys.exit(1 if falhou else 0)
+          PY
+
       - name: Encerrar stack local
         if: ${{ always() }}
         run: |

@@ -18,6 +18,8 @@ jobs:
     timeout-minutes: 30
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      # Opcional e preferencial: senha pura, sem codificacao na URI.
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
       DROPBOX_REFRESH_TOKEN: ${{ secrets.DROPBOX_REFRESH_TOKEN }}
       DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
@@ -42,7 +44,7 @@ jobs:
           # session pooler da mesma regiao (IPv4).
           # O usuario do pooler e sempre postgres.<ref>, independentemente
           # do usuario que vier no segredo; somente a senha e preservada.
-          DB_URL="$(SUPABASE_DB_URL="$SUPABASE_DB_URL" python3 - <<'PY'
+          DB_URL="$(SUPABASE_DB_URL="$SUPABASE_DB_URL" SUPABASE_DB_PASSWORD="$SUPABASE_DB_PASSWORD" python3 - <<'PY'
           import os
           import sys
           from urllib.parse import quote, unquote, urlsplit
@@ -68,14 +70,23 @@ jobs:
               print("::error::SUPABASE_DB_URL sem senha. Formato: postgresql://postgres:SENHA@db.gnosjzdguifktkspxwkt.supabase.co:5432/postgres", file=sys.stderr)
               sys.exit(1)
           usuario, senha_raw = unquote(userinfo[:dois_pontos]), userinfo[dois_pontos + 1:]
+          # Se o segredo SUPABASE_DB_PASSWORD existir, ele e a fonte da senha:
+          # cola a senha pura do painel, sem codificar caracteres especiais.
+          senha_secreta = os.environ.get("SUPABASE_DB_PASSWORD", "").strip()
+          if senha_secreta:
+              senha_raw = senha_secreta
+              origem_senha = "segredo SUPABASE_DB_PASSWORD"
+          else:
+              origem_senha = "SUPABASE_DB_URL"
           if not senha_raw:
               print(erro_formato, file=sys.stderr)
               sys.exit(1)
           # Testa as formas possiveis: senha crua, codificada uma vez e duas vezes.
           candidatos = []
           for cand in (senha_raw, unquote(senha_raw), unquote(unquote(senha_raw))):
-              if cand and cand not in candidatos:
-                  candidatos.append(cand)
+              for variante in (cand, cand.strip()):
+                  if variante and variante not in candidatos:
+                      candidatos.append(variante)
           if any("[YOUR-PASSWORD]" in c.upper() for c in candidatos):
               print("::error::SUPABASE_DB_URL ainda contem o placeholder [YOUR-PASSWORD]. Substitua-o pela senha real do banco no segredo do GitHub.", file=sys.stderr)
               sys.exit(1)
@@ -108,11 +119,11 @@ jobs:
                   break
           if escolhida is None:
               tamanhos = ",".join(str(len(c)) for c in candidatos)
-              print(f"::error::Nenhuma forma da senha conectou ao pooler. Recopie a senha real em Settings > Database (tamanhos testados: {tamanhos})", file=sys.stderr)
+              print(f"::error::Nenhuma forma da senha conectou ao pooler (tamanhos testados: {tamanhos}). Use Reset database password em Settings > Database e grave a senha nova no segredo SUPABASE_DB_PASSWORD (somente a senha, sem URI)", file=sys.stderr)
               sys.exit(1)
           indice, senha, DB_URL = escolhida
           # Diagnostico seguro: nunca imprime a senha, apenas o tamanho.
-          print(f"### Origem: host={partes.hostname} usuario={usuario} senha_com={len(senha)}_caracteres forma={indice}/{len(candidatos)}", file=sys.stderr)
+          print(f"### Origem: host={partes.hostname} usuario={usuario} senha_com={len(senha)}_caracteres forma={indice}/{len(candidatos)} fonte={origem_senha}", file=sys.stderr)
           print(DB_URL)
           PY
           )"

@@ -4,7 +4,8 @@
 
 | Segredo | Uso |
 |---|---|
-| `SUPABASE_DB_URL` | String de conexão direta do Postgres (porta 5432), com a senha. |
+| `SUPABASE_DB_URL` | String de conexão direta do Postgres (porta 5432). Usada para o host; a senha pode ficar desatualizada. |
+| `SUPABASE_DB_PASSWORD` | **Opcional e preferencial:** somente a senha do banco, em texto puro. Se existir, substitui a senha da URI — sem percent-encoding. |
 | `BACKUP_PASSPHRASE` | Senha do GPG AES256. **Sem ela não há restore** — guarde também offline. |
 | `DROPBOX_APP_KEY` | App key do app Dropbox (App Folder). |
 | `DROPBOX_APP_SECRET` | App secret do mesmo app. |
@@ -49,13 +50,16 @@
 
 - `password authentication failed for user "postgres"`: o pooler sempre reporta o
   usuário como `postgres` (ele separa o tenant `postgres.<ref>` internamente), mesmo
-  quando o cliente envia o usuário correto. A causa é a **senha** do segredo
-  `SUPABASE_DB_URL` estar errada, antiga ou com o placeholder `[YOUR-PASSWORD]`.
-  Recopie a URI em Supabase → Settings → Database → Connection string (URI) e
-  substitua `[YOUR-PASSWORD]` pela senha real do banco (se esquecida, use
-  "Reset database password" e atualize o segredo). Caracteres especiais na senha
-  devem estar codificados em percent (ex.: `@` → `%40`).
-- O passo "Derivar URL IPv4" imprime o tamanho da senha (sem revelá-la) para ajudar
-  a conferir se o segredo foi colado completo.
+  quando o cliente envia o usuário correto. A causa é a **senha** estar errada,
+  antiga ou com o placeholder `[YOUR-PASSWORD]`.
+  **Forma recomendada de corrigir:** Supabase → Settings → Database →
+  **Reset database password**, copie a senha nova mostrada uma única vez e crie/
+  atualize o segredo `SUPABASE_DB_PASSWORD` com **somente a senha** (sem URI, sem
+  aspas, sem codificar nada). O workflow usa esse segredo e monta a URI sozinho.
+  Alternativamente, recopie a URI em Connection string (URI), substitua
+  `[YOUR-PASSWORD]` pela senha real e codifique caracteres especiais (`@` → `%40`).
+- O passo "Derivar URL IPv4" testa a conexão com cada forma da senha e imprime só
+  o tamanho e a fonte (`segredo SUPABASE_DB_PASSWORD` ou `SUPABASE_DB_URL`), nunca
+  o valor. Isso ajuda a conferir se o segredo foi colado completo.
 - Runners do GitHub Actions não têm IPv6: por isso o backup deriva o session pooler
   `aws-0-us-west-2.pooler.supabase.com:5432` (IPv4) e nunca usa a conexão direta.

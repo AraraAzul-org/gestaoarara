@@ -102,7 +102,13 @@ jobs:
               select schemaname, tablename from pg_tables
               where schemaname in ('public', 'private', 'auth', 'storage', 'supabase_migrations')
             loop
-              execute format('truncate table %I.%I cascade', t.schemaname, t.tablename);
+              begin
+                execute format('truncate table %I.%I cascade', t.schemaname, t.tablename);
+              exception when insufficient_privilege or undefined_table then
+                -- Tabelas internas (ex.: auth.schema_migrations) pertencem a
+                -- outros papéis e nao precisam ser limpas para o teste.
+                null;
+              end;
             end loop;
           end $$;
           SQL

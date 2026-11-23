@@ -34,6 +34,34 @@ jobs:
           echo "::add-mask::$BACKUP_PASSPHRASE"
           echo "Todos os segredos estão presentes."
 
+      - name: Derivar URL IPv4 do session pooler
+        run: |
+          set -euo pipefail
+          # Os runners do GitHub Actions nao tem IPv6. A conexao direta
+          # (db.<ref>.supabase.co:5432) so responde em IPv6, entao usamos o
+          # session pooler da mesma regiao (IPv4), mantendo a senha do segredo.
+          DB_URL="$(SUPABASE_DB_URL="$SUPABASE_DB_URL" python3 - <<'PY'
+          import os
+          import re
+
+          url = os.environ["SUPABASE_DB_URL"]
+          direta = re.match(
+              r"^(postgres(?:ql)?)://([^:]+):([^@]+)@db\.([a-z0-9]+)\.supabase\.co(?::\d+)?(/.*)$",
+              url,
+          )
+          if direta:
+              esquema, _usuario, senha, ref, caminho = direta.groups()
+              url = (
+                  f"{esquema}://postgres.{ref}:{senha}"
+                  f"@aws-0-us-west-2.pooler.supabase.com:5432{caminho}"
+              )
+          print(url)
+          PY
+          )"
+          echo "::add-mask::$DB_URL"
+          echo "DB_URL=$DB_URL" >> "$GITHUB_ENV"
+          echo "### Usando session pooler IPv4"
+
       - name: Instalar Supabase CLI
         uses: supabase/setup-cli@v3.2.0
         with:
@@ -46,19 +74,19 @@ jobs:
 
           # Papéis personalizados do cluster (os papéis padrão do Supabase já
           # existem em qualquer projeto novo e são ignorados pelo CLI).
-          supabase db dump --remote="$SUPABASE_DB_URL" --role-only -f backup/roles.sql
+          supabase db dump --remote="$DB_URL" --role-only -f backup/roles.sql
 
           # Schema e dados. auth/storage/private são incluídos porque o projeto
           # tem triggers em auth.users, funções em private e RLS em storage.
           # O CLI usa o pg_dump compatível com a versão do servidor (17).
-          supabase db dump --remote="$SUPABASE_DB_URL" \
+          supabase db dump --remote="$DB_URL" \
             --schema public,private,auth,storage -f backup/schema.sql
 
-          supabase db dump --remote="$SUPABASE_DB_URL" \
+          supabase db dump --remote="$DB_URL" \
             --data-only --schema public,private,auth,storage -f backup/data.sql
 
           # Histórico de migrações aplicadas no projeto de origem.
-          supabase db dump --remote="$SUPABASE_DB_URL" \
+          supabase db dump --remote="$DB_URL" \
             --data-only --schema supabase_migrations -f backup/migrations.sql
 
           echo "Dumps gerados:"
@@ -81,7 +109,7 @@ jobs:
           grep -qi 'insert into "auth"\."users"' backup/data.sql || { echo "::error::data.sql sem auth.users" >&2; exit 1; }
           grep -qi 'schema_migrations' backup/migrations.sql || { echo "::error::migrations.sql sem histórico" >&2; exit 1; }
 
-          contar() { psql "$SUPABASE_DB_URL" -Atc "$1" | tr -d '[:space:]'; }
+          contar() { psql "$DB_URL" -Atc "$1" | tr -d '[:space:]'; }
           sha() { sha256sum "backup/$1" | cut -d' ' -f1; }
 
           jq -n \

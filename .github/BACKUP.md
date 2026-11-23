@@ -44,3 +44,18 @@
 6. Reimplantar a Edge Function `gerir-acesso`, copiar os 2 arquivos do Storage e
    atualizar URL/chaves no Vercel e os redirects do Supabase Auth.
 7. Copiar o Vault root key se houver segredos no Vault (hoje não há).
+
+## Solução de problemas
+
+- `password authentication failed for user "postgres"`: o pooler sempre reporta o
+  usuário como `postgres` (ele separa o tenant `postgres.<ref>` internamente), mesmo
+  quando o cliente envia o usuário correto. A causa é a **senha** do segredo
+  `SUPABASE_DB_URL` estar errada, antiga ou com o placeholder `[YOUR-PASSWORD]`.
+  Recopie a URI em Supabase → Settings → Database → Connection string (URI) e
+  substitua `[YOUR-PASSWORD]` pela senha real do banco (se esquecida, use
+  "Reset database password" e atualize o segredo). Caracteres especiais na senha
+  devem estar codificados em percent (ex.: `@` → `%40`).
+- O passo "Derivar URL IPv4" imprime o tamanho da senha (sem revelá-la) para ajudar
+  a conferir se o segredo foi colado completo.
+- Runners do GitHub Actions não têm IPv6: por isso o backup deriva o session pooler
+  `aws-0-us-west-2.pooler.supabase.com:5432` (IPv4) e nunca usa a conexão direta.

@@ -120,13 +120,9 @@ jobs:
           -- A stack local nao cria supabase_migrations; o dump de migracoes
           -- precisa do schema mesmo vazio.
           create schema if not exists supabase_migrations;
-          do $
-          begin
-            if to_regclass('supabase_migrations.schema_migrations') is not null then
-              execute 'truncate table supabase_migrations.schema_migrations';
-            end if;
-          end $;
           SQL
+          # A tabela de historico pode nao existir na stack local; sem problema.
+          psql "$LOCAL_DB" -v ON_ERROR_STOP=0 -c 'truncate table supabase_migrations.schema_migrations' >/dev/null 2>&1 || true
 
           psql "$LOCAL_DB" -v ON_ERROR_STOP=1 -f restore/schema.sql
           psql "$LOCAL_DB" -v ON_ERROR_STOP=1 -f restore/data.sql

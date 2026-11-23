@@ -53,7 +53,8 @@ jobs:
           echo "Backup selecionado: $ARQ"
 
           dbx_download "/${ARQ}" backup.gpg
-          SIDECAR="${ARQ%.gpg}.sha256"
+          # O backup grava o sidecar como <data>.sha256 (sem .tar.gz).
+          SIDECAR="${ARQ%.tar.gz.gpg}.sha256"
           dbx_download "/${SIDECAR}" backup.sha256
 
           HASH="$(awk '{print $1}' backup.sha256)"

@@ -24,6 +24,11 @@ jobs:
       DROPBOX_REFRESH_TOKEN: ${{ secrets.DROPBOX_REFRESH_TOKEN }}
       DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
       DROPBOX_APP_SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
+      # Necessarios para o que fica FORA do dump do Postgres.
+      SUPABASE_URL: https://gnosjzdguifktkspxwkt.supabase.co
+      SUPABASE_PROJECT_REF: gnosjzdguifktkspxwkt
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,8 +37,10 @@ jobs:
         run: |
           set -euo pipefail
           source .github/scripts/dropbox.sh
-          dbx_check_env SUPABASE_DB_URL BACKUP_PASSPHRASE DROPBOX_REFRESH_TOKEN DROPBOX_APP_KEY DROPBOX_APP_SECRET
+          dbx_check_env SUPABASE_DB_URL BACKUP_PASSPHRASE DROPBOX_REFRESH_TOKEN DROPBOX_APP_KEY DROPBOX_APP_SECRET SUPABASE_SERVICE_ROLE_KEY SUPABASE_ACCESS_TOKEN
           echo "::add-mask::$BACKUP_PASSPHRASE"
+          echo "::add-mask::$SUPABASE_SERVICE_ROLE_KEY"
+          echo "::add-mask::$SUPABASE_ACCESS_TOKEN"
           echo "Todos os segredos estão presentes."
 
       - name: Derivar URL IPv4 do session pooler
@@ -171,13 +178,177 @@ jobs:
           echo "Dumps gerados:"
           wc -l backup/*.sql
 
+      - name: Baixar Storage, Edge Functions e config do Auth
+        run: |
+          set -euo pipefail
+          mkdir -p backup/storage backup/functions
+
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          import pathlib
+          import re
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+          from email import policy
+          from email.parser import BytesParser
+
+          BASE = os.environ["SUPABASE_URL"].rstrip("/")
+          REF = os.environ["SUPABASE_PROJECT_REF"]
+          SERVICO = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
+          TOKEN = os.environ["SUPABASE_ACCESS_TOKEN"]
+          OUT = pathlib.Path("backup")
+          STORAGE = OUT / "storage"
+          FUNCTIONS = OUT / "functions"
+          STORAGE.mkdir(parents=True, exist_ok=True)
+          FUNCTIONS.mkdir(parents=True, exist_ok=True)
+
+          def http(url, headers, data=None, method=None, timeout=90):
+              req = urllib.request.Request(url, data=data, headers=headers, method=method)
+              try:
+                  with urllib.request.urlopen(req, timeout=timeout) as resp:
+                      return resp.read(), resp.headers.get("Content-Type", "")
+              except urllib.error.HTTPError as exc:
+                  detalhe = exc.read().decode("utf-8", "replace")[:300]
+                  raise SystemExit(f"HTTP {exc.code} em {url.split('?')[0]}: {detalhe}")
+
+          def sha(conteudo):
+              return hashlib.sha256(conteudo).hexdigest()
+
+          def seguro(nome):
+              nome = str(nome).replace("\\", "/")
+              partes = nome.split("/")
+              if not nome or nome.startswith("/") or ".." in partes or "\x00" in nome:
+                  raise SystemExit(f"Nome inseguro: {nome!r}")
+              return nome
+
+          def arquivos_da_function(conteudo, tipo):
+              tipo = (tipo or "").lower()
+              if tipo.startswith("multipart/"):
+                  cabecalho = f"Content-Type: {tipo}\r\nMIME-Version: 1.0\r\n\r\n".encode()
+                  mensagem = BytesParser(policy=policy.default).parsebytes(cabecalho + conteudo)
+                  achados = []
+                  for parte in mensagem.iter_parts():
+                      disp = parte.get("Content-Disposition", "")
+                      m = re.search(r'filename="([^"]+)"', disp) or re.search(r"filename=([^;\s]+)", disp)
+                      nome = m.group(1) if m else (parte.get_param("name") or f"arquivo-{len(achados)}")
+                      dados = parte.get_payload(decode=True)
+                      if dados is None:
+                          dados = str(parte.get_payload()).encode()
+                      achados.append((os.path.basename(nome), dados))
+                  return achados
+              try:
+                  dado = json.loads(conteudo)
+              except Exception:
+                  return [("index.ts", conteudo)]
+
+              def texto(v):
+                  return v.encode() if isinstance(v, str) else bytes(v)
+
+              if isinstance(dado, dict):
+                  if isinstance(dado.get("files"), list):
+                      return [(os.path.basename(str(f.get("name") or f.get("path") or "index.ts")),
+                               texto(f.get("content", f.get("data", "")))) for f in dado["files"]]
+                  for chave in ("body", "source", "content", "data"):
+                      if chave in dado:
+                          return [("index.ts", texto(dado[chave]))]
+              if isinstance(dado, list):
+                  return [(os.path.basename(str(f.get("name") or f"arquivo-{i}")),
+                           texto(f.get("content", ""))) for i, f in enumerate(dado)]
+              return [("index.ts", conteudo)]
+
+          # --- Storage: todos os buckets e todos os objetos ---
+          cabecalho_storage = {"apikey": SERVICO, "Authorization": "Bearer " + SERVICO}
+          bruto, _ = http(BASE + "/storage/v1/bucket", cabecalho_storage)
+          buckets = json.loads(bruto)
+          if not isinstance(buckets, list):
+              raise SystemExit("Resposta inesperada ao listar buckets")
+
+          storage = {}
+          for bucket in buckets:
+              nome_bucket = seguro(bucket["name"])
+              (STORAGE / nome_bucket).mkdir(parents=True, exist_ok=True)
+              offset = 0
+              while True:
+                  corpo = json.dumps({
+                      "prefix": "", "limit": 100, "offset": offset,
+                      "sortBy": {"column": "name", "order": "asc"},
+                  }).encode()
+                  rota = "/storage/v1/object/list/" + urllib.parse.quote(nome_bucket, safe="")
+                  lista, _ = http(BASE + rota, {**cabecalho_storage, "Content-Type": "application/json"}, corpo, "POST")
+                  pagina = json.loads(lista)
+                  if not isinstance(pagina, list):
+                      raise SystemExit(f"Lista de objetos inesperada no bucket {nome_bucket}")
+                  for objeto in pagina:
+                      nome_objeto = seguro(objeto.get("name", ""))
+                      destino = STORAGE / nome_bucket / nome_objeto
+                      destino.parent.mkdir(parents=True, exist_ok=True)
+                      rota = ("/storage/v1/object/" + urllib.parse.quote(nome_bucket, safe="") + "/" +
+                              urllib.parse.quote(nome_objeto, safe="/"))
+                      blob, _ = http(BASE + rota, cabecalho_storage)
+                      destino.write_bytes(blob)
+                      storage[f"{nome_bucket}/{nome_objeto}"] = {
+                          "bucket": nome_bucket,
+                          "name": nome_objeto,
+                          "sha256": sha(blob),
+                          "size": len(blob),
+                      }
+                  if len(pagina) < 100:
+                      break
+                  offset += 100
+
+          # --- Edge Functions: codigo + metadados ---
+          cabecalho_api = {"Authorization": "Bearer " + TOKEN, "Accept": "application/json"}
+          base_api = "https://api.supabase.com/v1/projects/" + REF
+          bruto, _ = http(base_api + "/functions", cabecalho_api)
+          funcoes = json.loads(bruto)
+          if not isinstance(funcoes, list):
+              raise SystemExit("Resposta inesperada ao listar Edge Functions")
+
+          functions = {}
+          for funcao in funcoes:
+              slug = seguro(funcao["slug"])
+              conteudo, tipo = http(base_api + "/functions/" + urllib.parse.quote(slug, safe="") + "/body", cabecalho_api)
+              arquivos = arquivos_da_function(conteudo, tipo)
+              if not arquivos:
+                  raise SystemExit(f"Function {slug} sem arquivos no download")
+              pasta = FUNCTIONS / slug
+              pasta.mkdir(parents=True, exist_ok=True)
+              hashes = {}
+              for nome, dados in arquivos:
+                  nome = seguro(nome)
+                  (pasta / nome).write_bytes(dados)
+                  hashes[nome] = sha(dados)
+              meta = {k: funcao.get(k) for k in (
+                  "slug", "name", "status", "version", "verify_jwt",
+                  "import_map", "entrypoint_path", "ezbr_sha256")}
+              (pasta / "metadata.json").write_text(
+                  json.dumps(meta, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+              functions[slug] = {**meta, "sha256": hashes,
+                                 "metadata_sha256": sha((pasta / "metadata.json").read_bytes())}
+
+          # --- Configuracao do Auth (redirects, SMTP, provedores, etc.) ---
+          bruto, _ = http(base_api + "/config/auth", cabecalho_api)
+          (OUT / "auth-config.json").write_bytes(bruto)
+          auth_config = {"sha256": sha(bruto), "size": len(bruto)}
+
+          (OUT / "extra.json").write_text(
+              json.dumps({"storage": storage, "functions": functions, "auth_config": auth_config},
+                         ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          PY
+
+          echo "### Complementos baixados:"
+          jq '{storage: (.storage | length), functions: (.functions | keys), auth_config: (.auth_config.size)}' backup/extra.json
+
       - name: Checagem de conteúdo e manifest
         run: |
           set -euo pipefail
 
-          for arquivo in roles.sql schema.sql data.sql migrations.sql; do
+          for arquivo in roles.sql schema.sql data.sql migrations.sql extra.json auth-config.json; do
             if [[ ! -s "backup/$arquivo" ]]; then
-              echo "::error::Dump vazio ou ausente: $arquivo" >&2
+              echo "::error::Arquivo vazio ou ausente: $arquivo" >&2
               exit 1
             fi
           done
@@ -192,6 +363,7 @@ jobs:
           sha() { sha256sum "backup/$1" | cut -d' ' -f1; }
 
           jq -n \
+            --slurpfile extra backup/extra.json \
             --arg criadoEm "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             --arg origem "gnosjzdguifktkspxwkt" \
             --argjson usuario "$(contar 'select count(*) from public.usuario')" \
@@ -221,9 +393,17 @@ jobs:
                 "roles.sql": $shaRoles,
                 "schema.sql": $shaSchema,
                 "data.sql": $shaData,
-                "migrations.sql": $shaMigrations
-              }
+                "migrations.sql": $shaMigrations,
+                "auth-config.json": $extra[0].auth_config.sha256
+              },
+              storage: $extra[0].storage,
+              functions: $extra[0].functions,
+              auth_config: $extra[0].auth_config
             }' > backup/manifest.json
+
+          [[ "$(jq '.storage | length' backup/extra.json)" = "$(jq -r '.contagens["storage.objects"]' backup/manifest.json)" ]] || { echo "::error::Quantidade de arquivos no Storage divergente do manifest" >&2; exit 1; }
+          [[ "$(jq '.functions | length' backup/extra.json)" -gt 0 ]] || { echo "::error::Nenhuma Edge Function exportada" >&2; exit 1; }
+          jq -e '.auth_config.sha256' backup/extra.json >/dev/null || { echo "::error::Config do Auth ausente" >&2; exit 1; }
 
           echo "### Manifest do backup"
           jq . backup/manifest.json
@@ -235,7 +415,9 @@ jobs:
           ARQ="gestaoarara-${DIA}"
           echo "ARQ=$ARQ" >> "$GITHUB_ENV"
 
-          tar -czf "${ARQ}.tar.gz" -C backup manifest.json roles.sql schema.sql data.sql migrations.sql
+          tar -czf "${ARQ}.tar.gz" -C backup \
+            manifest.json extra.json roles.sql schema.sql data.sql migrations.sql auth-config.json \
+            storage functions
           tar -tzf "${ARQ}.tar.gz" >/dev/null
 
           gpg --batch --yes --pinentry-mode loopback \

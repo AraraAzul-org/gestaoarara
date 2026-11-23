@@ -1,0 +1,175 @@
+name: Backup diário Supabase → Dropbox
+
+on:
+  schedule:
+    - cron: '0 3 * * *'   # 00:00 de Brasília
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-diario-gestaoarara
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+      DROPBOX_REFRESH_TOKEN: ${{ secrets.DROPBOX_REFRESH_TOKEN }}
+      DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+      DROPBOX_APP_SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validar segredos
+        run: |
+          set -euo pipefail
+          source .github/scripts/dropbox.sh
+          dbx_check_env SUPABASE_DB_URL BACKUP_PASSPHRASE DROPBOX_REFRESH_TOKEN DROPBOX_APP_KEY DROPBOX_APP_SECRET
+          echo "::add-mask::$BACKUP_PASSPHRASE"
+          echo "Todos os segredos estão presentes."
+
+      - name: Instalar Supabase CLI
+        uses: supabase/setup-cli@v3.2.0
+        with:
+          version: 3.3.0
+
+      - name: Gerar dumps lógicos
+        run: |
+          set -euo pipefail
+          mkdir -p backup
+
+          # Papéis personalizados do cluster (os papéis padrão do Supabase já
+          # existem em qualquer projeto novo e são ignorados pelo CLI).
+          supabase db dump --remote="$SUPABASE_DB_URL" --role-only -f backup/roles.sql
+
+          # Schema e dados. auth/storage/private são incluídos porque o projeto
+          # tem triggers em auth.users, funções em private e RLS em storage.
+          # O CLI usa o pg_dump compatível com a versão do servidor (17).
+          supabase db dump --remote="$SUPABASE_DB_URL" \
+            --schema public,private,auth,storage -f backup/schema.sql
+
+          supabase db dump --remote="$SUPABASE_DB_URL" \
+            --data-only --schema public,private,auth,storage -f backup/data.sql
+
+          # Histórico de migrações aplicadas no projeto de origem.
+          supabase db dump --remote="$SUPABASE_DB_URL" \
+            --data-only --schema supabase_migrations -f backup/migrations.sql
+
+          echo "Dumps gerados:"
+          wc -l backup/*.sql
+
+      - name: Checagem de conteúdo e manifest
+        run: |
+          set -euo pipefail
+
+          for arquivo in roles.sql schema.sql data.sql migrations.sql; do
+            if [[ ! -s "backup/$arquivo" ]]; then
+              echo "::error::Dump vazio ou ausente: $arquivo" >&2
+              exit 1
+            fi
+          done
+
+          grep -qi 'RESET ALL' backup/roles.sql || { echo "::error::roles.sql inválido" >&2; exit 1; }
+          grep -qi 'create table if not exists "public"\."usuario"' backup/schema.sql || { echo "::error::schema.sql sem public.usuario" >&2; exit 1; }
+          grep -qi 'insert into "public"\."jovem"' backup/data.sql || { echo "::error::data.sql sem dados de jovem" >&2; exit 1; }
+          grep -qi 'insert into "auth"\."users"' backup/data.sql || { echo "::error::data.sql sem auth.users" >&2; exit 1; }
+          grep -qi 'schema_migrations' backup/migrations.sql || { echo "::error::migrations.sql sem histórico" >&2; exit 1; }
+
+          contar() { psql "$SUPABASE_DB_URL" -Atc "$1" | tr -d '[:space:]'; }
+          sha() { sha256sum "backup/$1" | cut -d' ' -f1; }
+
+          jq -n \
+            --arg criadoEm "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg origem "gnosjzdguifktkspxwkt" \
+            --argjson usuario "$(contar 'select count(*) from public.usuario')" \
+            --argjson jovem "$(contar 'select count(*) from public.jovem')" \
+            --argjson usuarioMenu "$(contar 'select count(*) from public.usuario_menu')" \
+            --argjson acessolog "$(contar 'select count(*) from public.acessolog')" \
+            --argjson authUsers "$(contar 'select count(*) from auth.users')" \
+            --argjson storageObjects "$(contar 'select count(*) from storage.objects')" \
+            --argjson migracoes "$(contar 'select count(*) from supabase_migrations.schema_migrations')" \
+            --arg shaRoles "$(sha roles.sql)" \
+            --arg shaSchema "$(sha schema.sql)" \
+            --arg shaData "$(sha data.sql)" \
+            --arg shaMigrations "$(sha migrations.sql)" \
+            '{
+              criadoEm: $criadoEm,
+              origem: $origem,
+              contagens: {
+                "public.usuario": $usuario,
+                "public.jovem": $jovem,
+                "public.usuario_menu": $usuarioMenu,
+                "public.acessolog": $acessolog,
+                "auth.users": $authUsers,
+                "storage.objects": $storageObjects,
+                "supabase_migrations.schema_migrations": $migracoes
+              },
+              sha256: {
+                "roles.sql": $shaRoles,
+                "schema.sql": $shaSchema,
+                "data.sql": $shaData,
+                "migrations.sql": $shaMigrations
+              }
+            }' > backup/manifest.json
+
+          echo "### Manifest do backup"
+          jq . backup/manifest.json
+
+      - name: Compactar, criptografar e validar localmente
+        run: |
+          set -euo pipefail
+          DIA="$(date -u +%Y-%m-%d)"
+          ARQ="gestaoarara-${DIA}"
+          echo "ARQ=$ARQ" >> "$GITHUB_ENV"
+
+          tar -czf "${ARQ}.tar.gz" -C backup manifest.json roles.sql schema.sql data.sql migrations.sql
+          tar -tzf "${ARQ}.tar.gz" >/dev/null
+
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase "$BACKUP_PASSPHRASE" \
+            --symmetric --cipher-algo AES256 \
+            --output "${ARQ}.tar.gz.gpg" "${ARQ}.tar.gz"
+
+          # Prova que o arquivo criptografado abre e volta byte a byte.
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase "$BACKUP_PASSPHRASE" \
+            --decrypt "${ARQ}.tar.gz.gpg" > "${ARQ}.verificado.tar.gz"
+          cmp "${ARQ}.tar.gz" "${ARQ}.verificado.tar.gz"
+          tar -tzf "${ARQ}.verificado.tar.gz" >/dev/null
+          rm -f "${ARQ}.verificado.tar.gz"
+
+          sha256sum "${ARQ}.tar.gz.gpg" > "${ARQ}.sha256"
+          echo "### Arquivo pronto: ${ARQ}.tar.gz.gpg"
+          cat "${ARQ}.sha256"
+
+      - name: Enviar ao Dropbox e conferir o upload
+        run: |
+          set -euo pipefail
+          source .github/scripts/dropbox.sh
+          DBX_TOKEN="$(dbx_token)"
+          export DBX_TOKEN
+
+          dbx_upload "/${ARQ}.tar.gz.gpg" "${ARQ}.tar.gz.gpg" >/dev/null
+          dbx_upload "/${ARQ}.sha256" "${ARQ}.sha256" >/dev/null
+
+          mkdir -p verificacao
+          dbx_download "/${ARQ}.tar.gz.gpg" "verificacao/${ARQ}.gpg"
+          HASH="$(awk '{print $1}' "${ARQ}.sha256")"
+          echo "${HASH}  verificacao/${ARQ}.gpg" | sha256sum -c -
+
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase "$BACKUP_PASSPHRASE" \
+            --decrypt "verificacao/${ARQ}.gpg" > "verificacao/${ARQ}.tar.gz"
+          tar -tzf "verificacao/${ARQ}.tar.gz" >/dev/null
+
+          echo "### Upload conferido: sha256 e descriptografia OK"
+
+          dbx_limpar_antigos 'gestaoarara-' 30 3
+          echo "### Retenção de 30 dias aplicada"
+          dbx_listar | jq -r '.name'

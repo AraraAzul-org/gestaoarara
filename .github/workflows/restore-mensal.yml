@@ -89,9 +89,17 @@ jobs:
         run: |
           set -euo pipefail
 
-          # A stack local já tem os papéis padrão do Supabase. O dump do projeto
-          # hospedado traz ALTER ROLE postgres sem superuser; aplicá-lo rebaixaria
-          # o postgres local e quebraria o restore (permission denied em auth).
+          # Na stack local o superuser e supabase_admin; o postgres nao tem
+          # permissao para criar objetos em auth/storage. Devolve o superuser
+          # a ele usando a conexao interna do container (sem senha na URL).
+          DBCTR="$(docker ps --format '{{.Names}}' | grep -E '^supabase_db_' | head -n1)"
+          [[ -n "$DBCTR" ]] || { echo "::error::Container do banco local nao encontrado" >&2; exit 1; }
+          docker exec "$DBCTR" psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 \
+            -c 'alter role postgres with superuser;' >/dev/null
+          echo "### postgres local e superuser: $(psql "$LOCAL_DB" -Atc "select current_setting('is_superuser')")"
+
+          # O dump do projeto hospedado traz ALTER ROLE postgres sem superuser;
+          # filtramos esses comandos para nao rebaixar o papel local de novo.
           if grep -qi 'role postgres' restore/roles.sql; then
             echo "### Ignorando comandos de ROLE postgres do dump"
             grep -vi 'role postgres' restore/roles.sql > restore/roles-local.sql || true

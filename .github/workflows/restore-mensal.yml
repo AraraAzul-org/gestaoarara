@@ -118,11 +118,21 @@ jobs:
           drop schema if exists auth cascade;
           drop schema if exists public cascade;
           -- A stack local nao cria supabase_migrations; o dump de migracoes
-          -- precisa do schema mesmo vazio.
+          -- e data-only e precisa da tabela com as colunas do projeto remoto.
           create schema if not exists supabase_migrations;
+          create table if not exists supabase_migrations.schema_migrations (
+            version text not null,
+            statements text[],
+            name text,
+            created_by text,
+            idempotency_key text,
+            rollback text[]
+          );
+          create unique index if not exists schema_migrations_pkey
+            on supabase_migrations.schema_migrations (version);
+          create unique index if not exists schema_migrations_idempotency_key_key
+            on supabase_migrations.schema_migrations (idempotency_key);
           SQL
-          # A tabela de historico pode nao existir na stack local; sem problema.
-          psql "$LOCAL_DB" -v ON_ERROR_STOP=0 -c 'truncate table supabase_migrations.schema_migrations' >/dev/null 2>&1 || true
 
           psql "$LOCAL_DB" -v ON_ERROR_STOP=1 -f restore/schema.sql
           psql "$LOCAL_DB" -v ON_ERROR_STOP=1 -f restore/data.sql

@@ -109,25 +109,15 @@ jobs:
           psql "$LOCAL_DB" -v ON_ERROR_STOP=0 -f restore/roles-local.sql > /dev/null 2>&1 || true
           echo "### postgres local e superuser: $(psql "$LOCAL_DB" -Atc "select current_setting('is_superuser')")"
 
-          # Banco local descartável: limpa as tabelas antes de inserir os dados
-          # do backup, para evitar conflito de chave primária.
+          # Banco local descartável: remove os schemas que a stack cria para
+          # que o schema.sql do backup recrie tabelas e tipos exatamente como
+          # no projeto de origem (evita "type aal_level already exists").
           psql "$LOCAL_DB" -v ON_ERROR_STOP=1 <<'SQL'
-          do $$
-          declare t record;
-          begin
-            for t in
-              select schemaname, tablename from pg_tables
-              where schemaname in ('public', 'private', 'auth', 'storage', 'supabase_migrations')
-            loop
-              begin
-                execute format('truncate table %I.%I cascade', t.schemaname, t.tablename);
-              exception when insufficient_privilege or undefined_table then
-                -- Tabelas internas (ex.: auth.schema_migrations) pertencem a
-                -- outros papéis e nao precisam ser limpas para o teste.
-                null;
-              end;
-            end loop;
-          end $$;
+          drop schema if exists private cascade;
+          drop schema if exists storage cascade;
+          drop schema if exists auth cascade;
+          drop schema if exists public cascade;
+          truncate table supabase_migrations.schema_migrations;
           SQL
 
           psql "$LOCAL_DB" -v ON_ERROR_STOP=1 -f restore/schema.sql

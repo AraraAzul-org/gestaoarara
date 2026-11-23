@@ -89,8 +89,17 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Papéis que já existem na stack local podem gerar aviso; não é falha.
-          psql "$LOCAL_DB" -v ON_ERROR_STOP=0 -f restore/roles.sql > /dev/null 2>&1 || true
+          # A stack local já tem os papéis padrão do Supabase. O dump do projeto
+          # hospedado traz ALTER ROLE postgres sem superuser; aplicá-lo rebaixaria
+          # o postgres local e quebraria o restore (permission denied em auth).
+          if grep -qi 'role postgres' restore/roles.sql; then
+            echo "### Ignorando comandos de ROLE postgres do dump"
+            grep -vi 'role postgres' restore/roles.sql > restore/roles-local.sql || true
+          else
+            cp restore/roles.sql restore/roles-local.sql
+          fi
+          psql "$LOCAL_DB" -v ON_ERROR_STOP=0 -f restore/roles-local.sql > /dev/null 2>&1 || true
+          echo "### postgres local e superuser: $(psql "$LOCAL_DB" -Atc "select current_setting('is_superuser')")"
 
           # Banco local descartável: limpa as tabelas antes de inserir os dados
           # do backup, para evitar conflito de chave primária.

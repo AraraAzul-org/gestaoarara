@@ -99,7 +99,7 @@ jobs:
           begin
             for t in
               select schemaname, tablename from pg_tables
-              where schemaname in ('public', 'private', 'auth', 'storage')
+              where schemaname in ('public', 'private', 'auth', 'storage', 'supabase_migrations')
             loop
               execute format('truncate table %I.%I cascade', t.schemaname, t.tablename);
             end loop;

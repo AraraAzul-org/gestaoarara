@@ -15,6 +15,7 @@ function CampoTexto({
   tipo = "text",
   maxLength,
   compacto = false,
+  classeExtra = "",
 }: {
   nome: string;
   titulo: string;
@@ -24,9 +25,10 @@ function CampoTexto({
   tipo?: "text" | "date";
   maxLength?: number;
   compacto?: boolean;
+  classeExtra?: string;
 }) {
   return (
-    <label className={`flex flex-col gap-1 ${compacto ? "w-24" : "min-w-48 flex-1"}`}>
+    <label className={`flex flex-col gap-1 ${compacto ? "w-32" : "min-w-48 flex-1"} ${classeExtra}`}>
       <span className={rotulo}>{titulo}</span>
       {extenso ? (
         <textarea name={nome} rows={3} defaultValue={valor ?? ""} className={campo} />
@@ -64,7 +66,7 @@ export function FormLenco({
 
       <CampoTexto nome="grupoescoteiro" titulo="Grupo escoteiro" valor={valores?.grupoescoteiro} />
 
-      <div className="flex gap-3">
+      <div className="flex gap-4">
         <CampoTexto
           nome="numero"
           titulo="Número do lenço"
@@ -106,9 +108,10 @@ export function FormLenco({
         valor={valores?.observacao}
         obrigatorio={false}
         extenso
+        classeExtra="sm:col-span-2"
       />
 
-      <label className="flex flex-col gap-1">
+      <label className="flex flex-col gap-1 sm:col-span-2">
         <span className={rotulo}>Foto do lenço</span>
         <input
           type="file"
@@ -119,7 +122,7 @@ export function FormLenco({
         {valores?.fotolenco && <span className="text-xs text-gray-500">Já existe uma foto enviada.</span>}
       </label>
 
-      <label className="flex flex-col gap-1">
+      <label className="flex flex-col gap-1 sm:col-span-2">
         <span className={rotulo}>Foto da entrega</span>
         <input
           type="file"

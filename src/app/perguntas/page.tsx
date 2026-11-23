@@ -226,7 +226,7 @@ export default async function Perguntas({
               </label>
               <label className="flex items-center gap-2 pb-1.5 text-sm">
                 <input type="checkbox" name="naopontuada" />
-                Não pontuada
+                Não Pontua
               </label>
               <button className={btn}>Adicionar etapa</button>
             </form>
@@ -253,13 +253,13 @@ export default async function Perguntas({
                 }`}
                 title={
                   et.naopontuada
-                    ? "Etapa não pontuada: as respostas são registradas, mas não entram na nota."
+                    ? "Etapa Não Pontua: as respostas são registradas, mas não entram na nota."
                     : pontua
                       ? "As respostas desta etapa entram na nota."
                       : "As respostas desta etapa não entram na nota."
                 }
               >
-                {et.naopontuada ? "Não pontuada" : pontua ? "Pontua" : "Não pontua"}
+                {pontua ? "Pontua" : "Não Pontua"}
               </span>
               {et.notaminima != null && (
                 <span className="text-xs text-white/90">
@@ -297,7 +297,7 @@ export default async function Perguntas({
                   </label>
                   <label className="flex items-center gap-2 pb-1.5 text-sm">
                     <input type="checkbox" name="naopontuada" defaultChecked={et.naopontuada} />
-                    Não pontuada
+                    Não Pontua
                   </label>
                   <button className={btn}>Salvar</button>
                 </form>
@@ -364,9 +364,7 @@ export default async function Perguntas({
                         ) : (
                           semNota && (
                             <p className="mt-3 rounded bg-azul/5 p-2 text-sm text-gray-600">
-                              {et.naopontuada
-                                ? "Etapa não pontuada: as respostas são registradas, mas as opções não entram na nota."
-                                : "Esta etapa não pontua: as opções de resposta não entram na nota."}
+                              &quot;Etapa Não Pontua: as respostas são registradas, mas as opções não entram na nota.&quot;
                             </p>
                           )
                         )}

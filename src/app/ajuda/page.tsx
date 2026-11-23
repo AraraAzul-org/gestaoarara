@@ -111,11 +111,13 @@ export default async function Ajuda() {
             </li>
             <li>
               No topo da tela: <strong>Minha senha</strong> altera a senha (mínimo de 8 caracteres),{" "}
-              <strong>Ajuda</strong> abre este guia e <strong>Sair</strong> encerra a sessão.
+              <strong>Ajuda</strong> abre este guia, <strong>Doc. Técnica</strong> abre a documentação para dirigentes e{" "}
+              <strong>Sair</strong> encerra a sessão.
             </li>
             <li>
               Use o menu lateral para navegar. O grupo <strong>Cadastros</strong> começa fechado: clique no ▶ para abrir
-              o submenu. O item com fundo branco e texto azul indica a tela atual.
+              o submenu, onde ficam Jovens, Associados, Ramos, Funções, Situações, Avaliações, Questionários e Lenços. O
+              item com fundo branco e texto azul indica a tela atual.
             </li>
             <li>
               Se aparecer “Nenhum menu liberado” ou “Acesso não liberado”, seu cadastro ainda não tem liberações ou está
@@ -146,7 +148,9 @@ export default async function Ajuda() {
               <strong>Adultos por ramo e Jovens por ramo:</strong> para dirigentes, dois gráficos adicionais mostram o
               total de adultos ativos do grupo em cada ramo (inclusive “Sem ramo”) e de jovens ativos somente em
               Filhotes, Lobinho, Escoteiro, Sênior e Pioneiro — ramos fixos, independentemente do cadastro da tabela de
-              ramos. Com isso o Dashboard passa a ter três gráficos.
+              ramos. Com isso o Dashboard passa a ter três gráficos. O gráfico de jovens tem filtro por ramo: o dirigente
+              pode escolher um ramo ou ver todos; o escotista vê automaticamente somente o ramo do próprio usuário, sem
+              possibilidade de trocar.
             </li>
             <li>
               <strong>Promessas do ramo:</strong> para escotistas, mostra quem completa anos de promessa no mês atual,
@@ -169,9 +173,9 @@ export default async function Ajuda() {
             </li>
             <li>
               <strong>Ramo:</strong> dirigentes (função que avalia e linha Dirigente) podem escolher um ramo ou{" "}
-              <strong>Todos os ramos</strong>. Quem não é dirigente vê somente os jovens do próprio ramo e não recebe o
-              filtro. Isso vale para a listagem; qualquer pessoa com acesso a Jovens pode cadastrar ou editar jovens de
-              qualquer ramo.
+              <strong>Todos os ramos</strong>, tanto na listagem quanto no gráfico do Dashboard. Quem não é dirigente fica
+              limitado ao próprio ramo: na listagem não recebe o filtro e no Dashboard vê o ramo fixado. Qualquer pessoa
+              com acesso a Jovens pode cadastrar ou editar jovens de qualquer ramo.
             </li>
             <li>
               <strong>Cadastrar:</strong> abre o formulário na própria tela. Primeira linha: Registro (alfanumérico),
@@ -241,10 +245,14 @@ export default async function Ajuda() {
 
         <Secao id="cadastros" titulo="Cadastros">
           <p>
-            O submenu <strong>Cadastros</strong> reúne a manutenção das tabelas usadas pelo sistema. Cada item pode ser
-            liberado separadamente.
+            O submenu <strong>Cadastros</strong> reúne Jovens, Associados, Ramos, Funções, Situações, Avaliações,
+            Questionários e Lenços. Cada item pode ser liberado separadamente na tela de acessos.
           </p>
           <ul className="ml-5 list-disc space-y-2">
+            <li>
+              <strong>Jovens:</strong> cadastro e acompanhamento dos jovens. Ficou aqui junto aos demais cadastros; a
+              consulta de lenços continua no item “Lenços”. A liberação usa a chave <code>jovens</code>.
+            </li>
             <li>
               <strong>Associados:</strong> o formulário cria o login e o cadastro de adultos. Campos principais: Nome,
               Registro (até 15 caracteres), E-mail de login, Linha de atuação, Função, Ramo, Situação, APF, datas de
@@ -277,14 +285,15 @@ export default async function Ajuda() {
             </li>
             <li>
               <strong>Questionários:</strong> cadastre o questionário e suas etapas. Cada etapa define quem responde (
-              <strong>Associado</strong>, <strong>APF</strong> ou <strong>Diretor</strong>), se pontua, a nota mínima e as
-              perguntas. Perguntas podem ser <strong>Pontuada</strong> (com opções e notas) ou{" "}
+              <strong>Associado</strong>, <strong>APF</strong> ou <strong>Diretor</strong>), se pontua (
+              <strong>Pontua</strong> ou <strong>Não Pontua</strong>), a nota mínima e as perguntas. Perguntas podem ser <strong>Pontuada</strong> (com opções e notas) ou{" "}
               <strong>Descritiva</strong> (texto livre, com limite de 2000 caracteres na resposta). Perguntas com
               respostas não mudam de tipo e não podem ser excluídas.
             </li>
             <li>
-              <strong>Lenços:</strong> cadastro e edição dos registros de lenços. A consulta fica no item separado
-              “Lenços”, no grupo Geral do menu.
+              <strong>Lenços:</strong> cadastro e edição dos registros de lenços. Número e UF ficam na mesma linha; a
+              observação ocupa uma linha e, abaixo dela, vêm a foto do lenço e a foto da entrega, uma por linha. A
+              consulta fica no item separado “Lenços”, no grupo Geral do menu.
             </li>
           </ul>
         </Secao>
@@ -433,7 +442,8 @@ export default async function Ajuda() {
               Na criação: quem não faz parte do grupo recebe somente Meus assessorados; quem faz parte recebe Dashboard,
               Jovens, Promessas, Lenços, cadastro de Lenços, Minhas avaliações, Meu PPF e Meus assessorados. Função que
               avalia ou “Permite acesso aos Cadastros” acrescenta todos os cadastros; função que avalia somada à linha
-              Dirigente acrescenta Parecer, Resultados e Log de acesso.
+              Dirigente acrescenta Parecer, Resultados e Log de acesso. Jovens está no grupo Cadastros, mas continua
+              entre as liberações padrão de quem faz parte do grupo.
             </li>
             <li>
               A condição de dirigente continua valendo para filtros de dados (ramo em Jovens e Promessas), mas não
@@ -459,6 +469,20 @@ export default async function Ajuda() {
             <li>
               <strong>Não encontro o cadastro de lenços.</strong> Ele está dentro de Cadastros; a consulta é o item
               “Lenços” no menu lateral.
+            </li>
+            <li>
+              <strong>Onde fica o cadastro de jovens?</strong> Dentro de <strong>Cadastros › Jovens</strong>. Ele usa a
+              mesma chave de liberação de antes (<code>jovens</code>), então não é preciso ajustar os acessos por causa
+              da mudança de lugar.
+            </li>
+            <li>
+              <strong>O que é “Não Pontua”?</strong> É o estado de uma etapa do questionário cujas respostas são
+              registradas, mas não entram na nota. Aparece um único selo com esse texto; quando a etapa pontua, o selo
+              mostra “Pontua”.
+            </li>
+            <li>
+              <strong>Não vejo “Doc. Técnica” no topo.</strong> Esse link aparece somente para usuários da linha
+              Dirigente com função que avalia. Ele abre a documentação técnica do sistema.
             </li>
             <li>
               <strong>Esqueci a senha.</strong> Se você ainda consegue entrar, use Minha senha no topo. Caso contrário,

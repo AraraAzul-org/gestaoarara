@@ -99,7 +99,11 @@ const mesDaData = (iso: string | null) => (iso ? Number(String(iso).slice(5, 7))
 const anos = (valor: number | null) =>
   valor === null ? "—" : `${valor} ${valor === 1 ? "ano" : "anos"}`;
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ ramo?: string }>;
+}) {
   const supabase = await createClient();
   const sessao = await carregarSessao(supabase);
   if (!sessao) redirect("/login");
@@ -118,7 +122,19 @@ export default async function Home() {
 
   if (!eu.acessos.has("inicio")) redirect(primeiraRota(eu.acessos));
 
+  const params = await searchParams;
   const verResultados = eu.dirigente || eu.podeResultados;
+  // Escotistas acompanham o gráfico de jovens do próprio ramo; dirigentes podem
+  // escolher qualquer ramo (ou ver todos) e os demais perfis veem o total geral.
+  const verJovens = eu.escotista || verResultados;
+  const ramoPedido =
+    params.ramo && Number.isInteger(Number(params.ramo)) ? Number(params.ramo) : null;
+  const ramoEscolhido = eu.dirigente
+    ? ramoPedido
+    : eu.escotista
+      ? eu.idramo
+      : null;
+
   const [pessoasBrutas, situacoes, avaliacao, ramos, jovensBruto] = await Promise.all([
     verResultados
       ? supabase
@@ -137,11 +153,14 @@ export default async function Home() {
       .order("prazo", { ascending: false })
       .limit(1)
       .maybeSingle(),
-    eu.dirigente
+    eu.dirigente || verJovens
       ? supabase.from("ramo").select("idramo, nome").order("nome")
       : Promise.resolve({ data: [] as Ramo[] }),
-    eu.dirigente
-      ? supabase.from("jovem").select("idramo").eq("ativo", true)
+    verJovens
+      ? (() => {
+          const consulta = supabase.from("jovem").select("idramo").eq("ativo", true);
+          return ramoEscolhido !== null ? consulta.eq("idramo", ramoEscolhido) : consulta;
+        })()
       : Promise.resolve({ data: [] as RegistroRamo[] }),
   ]);
 
@@ -202,10 +221,17 @@ export default async function Home() {
       contagemJovens.set(jovem.idramo, (contagemJovens.get(jovem.idramo) ?? 0) + 1);
     }
   });
-  const jovensPorRamo: ItemDistribuicao[] = RAMOS_JOVENS.map((ramo) => ({
-    rotulo: ramo.rotulo,
-    quantidade: contagemJovens.get(ramo.id) ?? 0,
-  }));
+  const rotuloRamoEscolhido =
+    RAMOS_JOVENS.find((ramo) => ramo.id === ramoEscolhido)?.rotulo ??
+    listaRamos.find((ramo) => ramo.idramo === ramoEscolhido)?.nome ??
+    "Ramo selecionado";
+  const jovensPorRamo: ItemDistribuicao[] =
+    ramoEscolhido !== null
+      ? [{ rotulo: rotuloRamoEscolhido, quantidade: contagemJovens.get(ramoEscolhido) ?? 0 }]
+      : RAMOS_JOVENS.map((ramo) => ({
+          rotulo: ramo.rotulo,
+          quantidade: contagemJovens.get(ramo.id) ?? 0,
+        }));
 
   const total = (itensRamo: ItemDistribuicao[]) =>
     itensRamo.reduce((soma, item) => soma + item.quantidade, 0);
@@ -285,51 +311,81 @@ export default async function Home() {
           </p>
         )}
 
-        {verResultados && (
+        {verJovens && (
           <div className="mt-6 grid items-start gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {verResultados && (
+              <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+                <div className="flex flex-wrap items-center gap-2 border-b-2 border-amarelo bg-azul p-3 text-white">
+                  <h2 className="flex-1 text-sm font-semibold">Associados por situação</h2>
+                  <span className="rounded bg-white/90 px-2 py-0.5 text-xs font-medium text-gray-800">
+                    {pessoas.length} {pessoas.length === 1 ? "associado" : "associados"}
+                  </span>
+                </div>
+                <div className="p-4">
+                  {!itens.length ? (
+                    <p className="text-sm text-gray-600">Nenhum associado cadastrado.</p>
+                  ) : (
+                    <GraficoDistribuicao itens={itens} />
+                  )}
+                </div>
+              </section>
+            )}
+
+            {eu.dirigente && (
+              <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+                <div className="flex flex-wrap items-center gap-2 border-b-2 border-amarelo bg-azul p-3 text-white">
+                  <h2 className="flex-1 text-sm font-semibold">Adultos por ramo</h2>
+                  <span className="rounded bg-white/90 px-2 py-0.5 text-xs font-medium text-gray-800">
+                    {total(adultosPorRamo)} {total(adultosPorRamo) === 1 ? "adulto" : "adultos"}
+                  </span>
+                </div>
+                <div className="p-4">
+                  <GraficoDistribuicao itens={adultosPorRamo} unidade="adulto" unidadePlural="adultos" />
+                </div>
+              </section>
+            )}
+
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
               <div className="flex flex-wrap items-center gap-2 border-b-2 border-amarelo bg-azul p-3 text-white">
-                <h2 className="flex-1 text-sm font-semibold">Associados por situação</h2>
+                <h2 className="flex-1 text-sm font-semibold">Jovens por ramo</h2>
                 <span className="rounded bg-white/90 px-2 py-0.5 text-xs font-medium text-gray-800">
-                  {pessoas.length} {pessoas.length === 1 ? "associado" : "associados"}
+                  {total(jovensPorRamo)} {total(jovensPorRamo) === 1 ? "jovem" : "jovens"}
                 </span>
               </div>
               <div className="p-4">
-                {!itens.length ? (
-                  <p className="text-sm text-gray-600">Nenhum associado cadastrado.</p>
-                ) : (
-                  <GraficoDistribuicao itens={itens} />
-                )}
+                <form method="get" className="mb-4 flex flex-wrap items-end gap-2">
+                  {eu.dirigente ? (
+                    <>
+                      <label className="flex min-w-40 flex-1 flex-col gap-1 text-xs text-white">
+                        Ramo
+                        <select
+                          name="ramo"
+                          defaultValue={ramoPedido ?? ""}
+                          className="rounded border border-white/40 bg-white px-2 py-1 text-sm text-gray-900"
+                        >
+                          <option value="">Todos os ramos</option>
+                          {RAMOS_JOVENS.map((ramo) => (
+                            <option key={ramo.id} value={ramo.id}>
+                              {ramo.rotulo}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <button className="rounded bg-white px-3 py-1.5 text-sm font-medium text-azul hover:bg-amarelo-claro">
+                        Filtrar
+                      </button>
+                    </>
+                  ) : eu.escotista ? (
+                    <p className="text-xs text-white/90">
+                      Ramo do seu usuário: <strong>{rotuloRamoEscolhido}</strong>
+                    </p>
+                  ) : (
+                    <p className="text-xs text-white/90">Todos os ramos</p>
+                  )}
+                </form>
+                <GraficoDistribuicao itens={jovensPorRamo} unidade="jovem" unidadePlural="jovens" />
               </div>
             </section>
-
-            {eu.dirigente && (
-              <>
-                <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-                  <div className="flex flex-wrap items-center gap-2 border-b-2 border-amarelo bg-azul p-3 text-white">
-                    <h2 className="flex-1 text-sm font-semibold">Adultos por ramo</h2>
-                    <span className="rounded bg-white/90 px-2 py-0.5 text-xs font-medium text-gray-800">
-                      {total(adultosPorRamo)} {total(adultosPorRamo) === 1 ? "adulto" : "adultos"}
-                    </span>
-                  </div>
-                  <div className="p-4">
-                    <GraficoDistribuicao itens={adultosPorRamo} unidade="adulto" unidadePlural="adultos" />
-                  </div>
-                </section>
-
-                <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-                  <div className="flex flex-wrap items-center gap-2 border-b-2 border-amarelo bg-azul p-3 text-white">
-                    <h2 className="flex-1 text-sm font-semibold">Jovens por ramo</h2>
-                    <span className="rounded bg-white/90 px-2 py-0.5 text-xs font-medium text-gray-800">
-                      {total(jovensPorRamo)} {total(jovensPorRamo) === 1 ? "jovem" : "jovens"}
-                    </span>
-                  </div>
-                  <div className="p-4">
-                    <GraficoDistribuicao itens={jovensPorRamo} unidade="jovem" unidadePlural="jovens" />
-                  </div>
-                </section>
-              </>
-            )}
           </div>
         )}
 

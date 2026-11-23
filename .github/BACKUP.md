@@ -6,7 +6,7 @@
 |---|---|
 | `SUPABASE_DB_URL` | String de conexão direta do Postgres (porta 5432). Usada para o host; a senha pode ficar desatualizada. |
 | `SUPABASE_DB_PASSWORD` | **Opcional e preferencial:** somente a senha do banco, em texto puro. Se existir, substitui a senha da URI — sem percent-encoding. |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Obrigatório:** chave de serviço do projeto, usada para listar e baixar **todos** os arquivos do Storage (os bytes não saem no dump). |
+| `SUPABASE_SERVICE_ROLE_KEY_V2` | **Obrigatório:** chave secreta `sb_secret_...` do projeto, usada para listar e baixar **todos** os arquivos do Storage (os bytes não saem no dump). O segredo antigo `SUPABASE_SERVICE_ROLE_KEY` não é mais usado. |
 | `SUPABASE_ACCESS_TOKEN` | **Obrigatório:** Personal Access Token do Supabase com escopos `functions:read` e `auth:read`. Exporta o código das Edge Functions e a configuração do Auth. |
 | `BACKUP_PASSPHRASE` | Senha do GPG AES256. **Sem ela não há restore** — guarde também offline. |
 | `DROPBOX_APP_KEY` | App key do app Dropbox (App Folder). |
@@ -26,8 +26,8 @@
 5. Actions → **Setup Dropbox** → Run workflow com `acao=start`; abrir a URL, autorizar e copiar o código.
 6. Actions → **Setup Dropbox** → Run workflow com `acao=finish` e o código no campo `codigo`.
 7. Apagar o segredo `BOOTSTRAP_PAT`.
-8. Criar `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API →
-   `service_role` secret key) e `SUPABASE_ACCESS_TOKEN` (Supabase → Account →
+8. Criar `SUPABASE_SERVICE_ROLE_KEY_V2` (Supabase → Project Settings → API Keys →
+   **New secret key**, formato `sb_secret_...`) e `SUPABASE_ACCESS_TOKEN` (Supabase → Account →
    Access Tokens → Generate new token, com `functions:read` e `auth:read`).
    Ambos ficam apenas como segredos do GitHub e nunca são impressos nos logs.
 

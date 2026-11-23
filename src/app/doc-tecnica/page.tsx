@@ -265,8 +265,9 @@ export default async function DocumentacaoTecnica() {
               no Vercel. A proteção é feita por RLS.
             </li>
             <li>
-              <strong>Servidor (não vai ao navegador):</strong> <code>SUPABASE_SERVICE_ROLE_KEY</code>, usada apenas em{" "}
-              <code>src/lib/supabase/admin.ts</code> dentro de Server Actions.
+              <strong>Servidor (não vai ao navegador):</strong> <code>SUPABASE_SERVICE_ROLE_KEY</code> está reservada
+              para <code>src/lib/supabase/admin.ts</code> (uso em Server Actions). Hoje não há consumo ativo dela na
+              aplicação e ela não está configurada no Vercel.
             </li>
             <li>
               <strong>GitHub Actions:</strong> <code>SUPABASE_DB_URL</code>, <code>SUPABASE_DB_PASSWORD</code>,{" "}

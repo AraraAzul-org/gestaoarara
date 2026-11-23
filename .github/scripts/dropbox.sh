@@ -37,7 +37,8 @@ dbx_api() {
 
 dbx_upload() {
   local caminho="$1" arquivo="$2" arg
-  arg="$(jq -nc --arg path "$caminho" '{path:$path,mode:"add",autorename:false,mute:false,strict_conflict:false}')"
+  # overwrite permite reexecutar no mesmo dia sem 409 de conflito no Dropbox.
+  arg="$(jq -nc --arg path "$caminho" '{path:$path,mode:"overwrite",autorename:false,mute:false,strict_conflict:false}')"
   curl -fsS --retry 3 --retry-delay 2 -X POST https://content.dropboxapi.com/2/files/upload \
     -H "Authorization: Bearer ${DBX_TOKEN}" \
     -H 'Content-Type: application/octet-stream' \

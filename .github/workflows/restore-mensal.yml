@@ -1,0 +1,144 @@
+name: Teste mensal de restore
+
+on:
+  schedule:
+    - cron: '0 4 1 * *'   # dia 1º, 01:00 de Brasília
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: restore-mensal-gestaoarara
+  cancel-in-progress: false
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+      DROPBOX_REFRESH_TOKEN: ${{ secrets.DROPBOX_REFRESH_TOKEN }}
+      DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+      DROPBOX_APP_SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
+      LOCAL_DB: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validar segredos
+        run: |
+          set -euo pipefail
+          source .github/scripts/dropbox.sh
+          dbx_check_env BACKUP_PASSPHRASE DROPBOX_REFRESH_TOKEN DROPBOX_APP_KEY DROPBOX_APP_SECRET
+          echo "::add-mask::$BACKUP_PASSPHRASE"
+
+      - name: Instalar Supabase CLI
+        uses: supabase/setup-cli@v3.2.0
+        with:
+          version: 3.3.0
+
+      - name: Baixar o backup mais recente e verificar integridade
+        run: |
+          set -euo pipefail
+          source .github/scripts/dropbox.sh
+          DBX_TOKEN="$(dbx_token)"
+          export DBX_TOKEN
+
+          ARQ="$(dbx_listar \
+            | jq -r '.name | select(startswith("gestaoarara-") and endswith(".tar.gz.gpg"))' \
+            | sort -r \
+            | head -n 1)"
+          [[ -n "$ARQ" ]] || { echo "::error::Nenhum backup encontrado no Dropbox" >&2; exit 1; }
+          echo "Backup selecionado: $ARQ"
+
+          dbx_download "/${ARQ}" backup.gpg
+          SIDECAR="${ARQ%.gpg}.sha256"
+          dbx_download "/${SIDECAR}" backup.sha256
+
+          HASH="$(awk '{print $1}' backup.sha256)"
+          echo "${HASH}  backup.gpg" | sha256sum -c -
+
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase "$BACKUP_PASSPHRASE" \
+            --decrypt backup.gpg > backup.tar.gz
+          tar -tzf backup.tar.gz >/dev/null
+
+          mkdir -p restore
+          tar -xzf backup.tar.gz -C restore
+
+          for arquivo in roles.sql schema.sql data.sql migrations.sql; do
+            esperado="$(jq -r --arg f "$arquivo" '.sha256[$f] // empty' restore/manifest.json)"
+            [[ -n "$esperado" ]] || { echo "::error::Manifest sem checksum de $arquivo" >&2; exit 1; }
+            obtido="$(sha256sum "restore/$arquivo" | cut -d' ' -f1)"
+            [[ "$esperado" = "$obtido" ]] || { echo "::error::Checksum divergente: $arquivo" >&2; exit 1; }
+          done
+
+          echo "### Backup íntegro. Manifest:"
+          jq . restore/manifest.json
+
+      - name: Subir stack Supabase local
+        run: |
+          set -euo pipefail
+          docker --version
+          supabase init
+          supabase start
+
+      - name: Restaurar no banco local e comparar contagens
+        run: |
+          set -euo pipefail
+
+          # Papéis que já existem na stack local podem gerar aviso; não é falha.
+          psql "$LOCAL_DB" -v ON_ERROR_STOP=0 -f restore/roles.sql > /dev/null 2>&1 || true
+
+          # Banco local descartável: limpa as tabelas antes de inserir os dados
+          # do backup, para evitar conflito de chave primária.
+          psql "$LOCAL_DB" -v ON_ERROR_STOP=1 <<'SQL'
+          do $$
+          declare t record;
+          begin
+            for t in
+              select schemaname, tablename from pg_tables
+              where schemaname in ('public', 'private', 'auth', 'storage')
+            loop
+              execute format('truncate table %I.%I cascade', t.schemaname, t.tablename);
+            end loop;
+          end $$;
+          SQL
+
+          psql "$LOCAL_DB" -v ON_ERROR_STOP=1 -f restore/schema.sql
+          psql "$LOCAL_DB" -v ON_ERROR_STOP=1 -f restore/data.sql
+          psql "$LOCAL_DB" -v ON_ERROR_STOP=1 -f restore/migrations.sql
+
+          export LOCAL_DB
+          python3 - <<'PY'
+          import json
+          import os
+          import subprocess
+          import sys
+
+          manifest = json.load(open("restore/manifest.json", encoding="utf-8"))
+          falhou = False
+          print("### Comparação de contagens (esperado / obtido)")
+          for tabela, esperado in manifest["contagens"].items():
+              r = subprocess.run(
+                  ["psql", os.environ["LOCAL_DB"], "-Atc", f"select count(*) from {tabela}"],
+                  capture_output=True,
+                  text=True,
+              )
+              if r.returncode != 0:
+                  print(f"ERRO ao consultar {tabela}: {r.stderr.strip()}")
+                  falhou = True
+                  continue
+              obtido = int(r.stdout.strip() or -1)
+              situacao = "OK" if obtido == esperado else "DIVERGENTE"
+              print(f"{situacao:11} {tabela}: {esperado} / {obtido}")
+              if obtido != esperado:
+                  falhou = True
+          sys.exit(1 if falhou else 0)
+          PY
+
+      - name: Encerrar stack local
+        if: ${{ always() }}
+        run: |
+          supabase stop || true

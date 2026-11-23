@@ -1,0 +1,135 @@
+name: Setup Dropbox (executar uma vez)
+
+on:
+  workflow_dispatch:
+    inputs:
+      acao:
+        description: 'start = gerar URL de autorização | finish = gerar o refresh token'
+        required: true
+        default: start
+        type: choice
+        options:
+          - start
+          - finish
+      codigo:
+        description: 'Código exibido pelo Dropbox (preencher somente no finish)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Validar segredos necessários
+        env:
+          APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+          APP_SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
+          PAT: ${{ secrets.BOOTSTRAP_PAT }}
+        run: |
+          set -euo pipefail
+          for nome in APP_KEY APP_SECRET PAT; do
+            if [[ -z "${!nome}" ]]; then
+              echo "::error::Falta o segredo $nome (crie DROPBOX_APP_KEY, DROPBOX_APP_SECRET e BOOTSTRAP_PAT)" >&2
+              exit 1
+            fi
+          done
+          echo "::add-mask::$APP_SECRET"
+          echo "::add-mask::$PAT"
+          echo "Segredos de entrada OK."
+
+      - name: 1/2 - Gerar URL de autorização
+        if: ${{ inputs.acao == 'start' }}
+        env:
+          APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+        run: |
+          set -euo pipefail
+          CHAVE="$(python3 -c 'import os,urllib.parse; print(urllib.parse.quote(os.environ["APP_KEY"], safe=""))')"
+          URL="https://www.dropbox.com/oauth2/authorize?client_id=${CHAVE}&response_type=code&token_access_type=offline"
+          echo "### Abra esta URL no navegador, autorize o app e copie o código exibido:"
+          echo "$URL"
+          echo "### Depois rode este workflow novamente com acao=finish e cole o código no campo 'codigo'."
+
+      - name: 2/2 - Trocar código por refresh token e gravar no GitHub
+        if: ${{ inputs.acao == 'finish' }}
+        env:
+          APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+          APP_SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
+          PAT: ${{ secrets.BOOTSTRAP_PAT }}
+          CODIGO: ${{ inputs.codigo }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          [[ -n "${CODIGO}" ]] || { echo "::error::Preencha o campo 'codigo'"; exit 1; }
+          echo "::add-mask::$APP_KEY"
+          echo "::add-mask::$APP_SECRET"
+          echo "::add-mask::$PAT"
+          echo "::add-mask::$CODIGO"
+
+          RESPOSTA="$(curl -fsS -X POST https://api.dropboxapi.com/oauth2/token \
+            --data-urlencode 'grant_type=authorization_code' \
+            --data-urlencode "code=${CODIGO}" \
+            --data-urlencode "client_id=${APP_KEY}" \
+            --data-urlencode "client_secret=${APP_SECRET}" \
+            --data-urlencode 'token_access_type=offline')"
+
+          REFRESH="$(printf '%s' "$RESPOSTA" | jq -r '.refresh_token // empty')"
+          ACCESS="$(printf '%s' "$RESPOSTA" | jq -r '.access_token // empty')"
+          [[ -n "$REFRESH" && -n "$ACCESS" ]] || {
+            echo "::error::O Dropbox não devolveu refresh_token. Confira o código e o escopo do app." >&2
+            exit 1
+          }
+          echo "::add-mask::$REFRESH"
+          echo "::add-mask::$ACCESS"
+
+          CONTA="$(curl -fsS -X POST https://api.dropboxapi.com/2/users/get_current_account \
+            -H "Authorization: Bearer ${ACCESS}" \
+            -H 'Content-Type: application/json' \
+            --data 'null' | jq -r '.account_id')"
+          echo "Conta Dropbox autorizada: ${CONTA}"
+
+          python3 -m pip install --quiet pynacl
+          export REFRESH
+          python3 - <<'PY'
+          import base64
+          import json
+          import os
+          import urllib.request
+
+          from nacl.public import PublicKey, SealedBox
+
+          pat = os.environ["PAT"]
+          repo = os.environ["REPO"]
+          segredo = os.environ["REFRESH"]
+          headers = {
+              "Authorization": f"Bearer {pat}",
+              "Accept": "application/vnd.github+json",
+              "X-GitHub-Api-Version": "2022-11-28",
+              "User-Agent": "gestaoarara-backup-setup",
+          }
+
+          req = urllib.request.Request(
+              f"https://api.github.com/repos/{repo}/actions/secrets/public-key",
+              headers=headers,
+          )
+          with urllib.request.urlopen(req) as resp:
+              chave = json.load(resp)
+
+          caixa = SealedBox(PublicKey(base64.b64decode(chave["key"])))
+          cifrado = base64.b64encode(caixa.encrypt(segredo.encode())).decode()
+          corpo = json.dumps({"encrypted_value": cifrado, "key_id": chave["key_id"]}).encode()
+
+          req = urllib.request.Request(
+              f"https://api.github.com/repos/{repo}/actions/secrets/DROPBOX_REFRESH_TOKEN",
+              data=corpo,
+              headers={**headers, "Content-Type": "application/json"},
+              method="PUT",
+          )
+          with urllib.request.urlopen(req) as resp:
+              print(f"Segredo DROPBOX_REFRESH_TOKEN gravado (HTTP {resp.status}).")
+          PY
+
+          echo "### Setup concluído. Apague o segredo BOOTSTRAP_PAT nas configurações do repositório."

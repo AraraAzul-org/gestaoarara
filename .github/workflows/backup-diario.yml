@@ -44,26 +44,47 @@ jobs:
           # do usuario que vier no segredo; somente a senha e preservada.
           DB_URL="$(SUPABASE_DB_URL="$SUPABASE_DB_URL" python3 - <<'PY'
           import os
-          import re
           import sys
+          from urllib.parse import quote, unquote, urlsplit
 
-          url = os.environ["SUPABASE_DB_URL"]
-          senha = re.search(r"://[^:/@]+:([^@]+)@", url)
-          if not senha:
-              print("::error::SUPABASE_DB_URL nao parece uma URL com senha", file=sys.stderr)
+          url = os.environ["SUPABASE_DB_URL"].strip()
+          try:
+              partes = urlsplit(url)
+          except ValueError:
+              print("::error::SUPABASE_DB_URL invalida: confira o placeholder [YOUR-PASSWORD] e caracteres especiais nao codificados", file=sys.stderr)
               sys.exit(1)
-          url = (
+          if partes.scheme not in ("postgres", "postgresql") or not partes.hostname:
+              print("::error::SUPABASE_DB_URL nao e uma URL postgresql:// valida", file=sys.stderr)
+              sys.exit(1)
+          if partes.password is None:
+              print("::error::SUPABASE_DB_URL sem senha. Formato: postgresql://postgres:SENHA@db.gnosjzdguifktkspxwkt.supabase.co:5432/postgres", file=sys.stderr)
+              sys.exit(1)
+          senha = unquote(partes.password)
+          if senha in ("", "[YOUR-PASSWORD]"):
+              print("::error::Senha vazia ou placeholder [YOUR-PASSWORD]. Copie a URI real em Settings > Database > Connection string.", file=sys.stderr)
+              sys.exit(1)
+          # Diagnostico seguro: nunca imprime a senha, apenas o tamanho.
+          print(f"### Origem: host={partes.hostname} usuario={partes.username} senha_com={len(senha)}_caracteres", file=sys.stderr)
+          print(
               "postgresql://postgres.gnosjzdguifktkspxwkt:"
-              + senha.group(1)
+              + quote(senha, safe="")
               + "@aws-0-us-west-2.pooler.supabase.com:5432/postgres"
           )
-          print(url)
           PY
           )"
           echo "::add-mask::$DB_URL"
           echo "DB_URL=$DB_URL" >> "$GITHUB_ENV"
           echo "PGUSER=postgres.gnosjzdguifktkspxwkt" >> "$GITHUB_ENV"
           echo "### Usando session pooler IPv4 (usuario postgres.<ref>)"
+
+      - name: Testar conexão com o banco
+        run: |
+          set -euo pipefail
+          # Falha cedo, sem baixar imagem Docker, se a senha do segredo estiver errada.
+          # Nota: o pooler sempre reporta o usuario como "postgres" na mensagem de
+          # erro, mesmo quando o cliente envia postgres.<ref> corretamente.
+          psql "$DB_URL" -Atc 'select 1' >/dev/null
+          echo "### Conexão OK"
 
       - name: Instalar Supabase CLI
         uses: supabase/setup-cli@v3.2.0

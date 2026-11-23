@@ -56,22 +56,13 @@ jobs:
           if esquema not in ("postgres", "postgresql"):
               print(erro_formato, file=sys.stderr)
               sys.exit(1)
-          # Separa a autoridade manualmente: urlsplit rejeita colchetes na senha,
-          # e senhas geradas podem conter [ e ].
-          fim = len(resto)
-          for ch in "/?#":
-              pos = resto.find(ch)
-              if pos >= 0:
-                  fim = min(fim, pos)
-          autoridade, sufixo = resto[:fim], resto[fim:]
-          arroba = autoridade.rfind("@")
+          # Separa pelo ULTIMO @: a senha pode conter @, #, /, ? ou colchetes
+          # sem codificar, e urlsplit nao aceita isso na autoridade.
+          arroba = resto.rfind("@")
           if arroba == -1:
-              if "@" in resto:
-                  print("::error::senha com caracteres nao codificados (#, / ou ?); copie a URI do painel com %XX", file=sys.stderr)
-              else:
-                  print(erro_formato, file=sys.stderr)
+              print(erro_formato, file=sys.stderr)
               sys.exit(1)
-          userinfo, host = autoridade[:arroba], autoridade[arroba + 1:]
+          userinfo, host_parte = resto[:arroba], resto[arroba + 1:]
           dois_pontos = userinfo.find(":")
           if dois_pontos == -1:
               print("::error::SUPABASE_DB_URL sem senha. Formato: postgresql://postgres:SENHA@db.gnosjzdguifktkspxwkt.supabase.co:5432/postgres", file=sys.stderr)
@@ -83,15 +74,15 @@ jobs:
           if "[YOUR-PASSWORD]" in senha.upper():
               print("::error::SUPABASE_DB_URL ainda contem o placeholder [YOUR-PASSWORD]. Substitua-o pela senha real do banco no segredo do GitHub.", file=sys.stderr)
               sys.exit(1)
-          # Valida o host so apos codificar a senha (evita erro com colchetes nela).
-          seguro = f"{esquema}://{quote(usuario, safe='.')}:{quote(senha, safe='')}@{host}{sufixo}"
+          # Valida o host so apos codificar a senha (aceita qualquer caractere nela).
+          seguro = f"{esquema}://{quote(usuario, safe='.')}:{quote(senha, safe='')}@{host_parte}"
           try:
               partes = urlsplit(seguro)
           except ValueError:
-              print("::error::host invalido na SUPABASE_DB_URL; confira se a senha tem #, / ou ? sem codificar", file=sys.stderr)
+              print("::error::host invalido na SUPABASE_DB_URL", file=sys.stderr)
               sys.exit(1)
-          if not partes.hostname or "." not in host.split("@")[-1].split(":")[0]:
-              print("::error::host invalido na SUPABASE_DB_URL; confira se a senha tem #, / ou ? sem codificar", file=sys.stderr)
+          if not partes.hostname or "." not in (partes.hostname or ""):
+              print("::error::host invalido na SUPABASE_DB_URL", file=sys.stderr)
               sys.exit(1)
           # Diagnostico seguro: nunca imprime a senha, apenas o tamanho.
           print(f"### Origem: host={partes.hostname} usuario={usuario} senha_com={len(senha)}_caracteres", file=sys.stderr)

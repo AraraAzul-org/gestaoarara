@@ -270,34 +270,47 @@ jobs:
           for bucket in buckets:
               nome_bucket = seguro(bucket["name"])
               (STORAGE / nome_bucket).mkdir(parents=True, exist_ok=True)
-              offset = 0
-              while True:
-                  corpo = json.dumps({
-                      "prefix": "", "limit": 100, "offset": offset,
-                      "sortBy": {"column": "name", "order": "asc"},
-                  }).encode()
-                  rota = "/storage/v1/object/list/" + urllib.parse.quote(nome_bucket, safe="")
-                  lista, _ = http(BASE + rota, {**cabecalho_storage, "Content-Type": "application/json"}, corpo, "POST")
-                  pagina = json.loads(lista)
-                  if not isinstance(pagina, list):
-                      raise SystemExit(f"Lista de objetos inesperada no bucket {nome_bucket}")
-                  for objeto in pagina:
-                      nome_objeto = seguro(objeto.get("name", ""))
-                      destino = STORAGE / nome_bucket / nome_objeto
-                      destino.parent.mkdir(parents=True, exist_ok=True)
-                      rota = ("/storage/v1/object/" + urllib.parse.quote(nome_bucket, safe="") + "/" +
-                              urllib.parse.quote(nome_objeto, safe="/"))
-                      blob, _ = http(BASE + rota, cabecalho_storage)
-                      destino.write_bytes(blob)
-                      storage[f"{nome_bucket}/{nome_objeto}"] = {
-                          "bucket": nome_bucket,
-                          "name": nome_objeto,
-                          "sha256": sha(blob),
-                          "size": len(blob),
-                      }
-                  if len(pagina) < 100:
-                      break
-                  offset += 100
+              rota_lista = "/storage/v1/object/list/" + urllib.parse.quote(nome_bucket, safe="")
+
+              def listar(prefixo):
+                  """Percorre pastas: a API devolve 'prefix' no lugar dos arquivos filhos."""
+                  offset = 0
+                  while True:
+                      corpo = json.dumps({
+                          "prefix": prefixo, "limit": 100, "offset": offset,
+                          "sortBy": {"column": "name", "order": "asc"},
+                      }).encode()
+                      lista, _ = http(BASE + rota_lista,
+                                      {**cabecalho_storage, "Content-Type": "application/json"}, corpo, "POST")
+                      pagina = json.loads(lista)
+                      if not isinstance(pagina, list):
+                          raise SystemExit(f"Lista de objetos inesperada no bucket {nome_bucket}")
+                      for objeto in pagina:
+                          nome = seguro(objeto.get("name", ""))
+                          caminho = prefixo + nome
+                          if objeto.get("type") == "prefix" or objeto.get("id") is None:
+                              if "/" in nome or not nome:
+                                  raise SystemExit(f"Prefixo inseguro: {nome!r}")
+                              yield from listar(caminho + "/")
+                              continue
+                          destino = STORAGE / nome_bucket / caminho
+                          destino.parent.mkdir(parents=True, exist_ok=True)
+                          rota = ("/storage/v1/object/" + urllib.parse.quote(nome_bucket, safe="") + "/" +
+                                  urllib.parse.quote(caminho, safe="/"))
+                          blob, _ = http(BASE + rota, cabecalho_storage)
+                          destino.write_bytes(blob)
+                          yield caminho, blob
+                      if len(pagina) < 100:
+                          break
+                      offset += 100
+
+              for caminho, blob in listar(""):
+                  storage[f"{nome_bucket}/{caminho}"] = {
+                      "bucket": nome_bucket,
+                      "name": caminho,
+                      "sha256": sha(blob),
+                      "size": len(blob),
+                  }
 
           # --- Edge Functions: codigo + metadados ---
           cabecalho_api = {"Authorization": "Bearer " + TOKEN, "Accept": "application/json"}

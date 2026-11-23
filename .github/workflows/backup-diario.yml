@@ -67,30 +67,53 @@ jobs:
           if dois_pontos == -1:
               print("::error::SUPABASE_DB_URL sem senha. Formato: postgresql://postgres:SENHA@db.gnosjzdguifktkspxwkt.supabase.co:5432/postgres", file=sys.stderr)
               sys.exit(1)
-          usuario, senha = unquote(userinfo[:dois_pontos]), unquote(userinfo[dois_pontos + 1:])
-          if not senha:
+          usuario, senha_raw = unquote(userinfo[:dois_pontos]), userinfo[dois_pontos + 1:]
+          if not senha_raw:
               print(erro_formato, file=sys.stderr)
               sys.exit(1)
-          if "[YOUR-PASSWORD]" in senha.upper():
+          # Testa as formas possiveis: senha crua, codificada uma vez e duas vezes.
+          candidatos = []
+          for cand in (senha_raw, unquote(senha_raw), unquote(unquote(senha_raw))):
+              if cand and cand not in candidatos:
+                  candidatos.append(cand)
+          if any("[YOUR-PASSWORD]" in c.upper() for c in candidatos):
               print("::error::SUPABASE_DB_URL ainda contem o placeholder [YOUR-PASSWORD]. Substitua-o pela senha real do banco no segredo do GitHub.", file=sys.stderr)
               sys.exit(1)
-          # Valida o host so apos codificar a senha (aceita qualquer caractere nela).
-          seguro = f"{esquema}://{quote(usuario, safe='.')}:{quote(senha, safe='')}@{host_parte}"
+          # Valida o host (essa parte nao contem a senha).
           try:
-              partes = urlsplit(seguro)
+              partes = urlsplit(f"{esquema}://{host_parte}")
           except ValueError:
               print("::error::host invalido na SUPABASE_DB_URL", file=sys.stderr)
               sys.exit(1)
           if not partes.hostname or "." not in (partes.hostname or ""):
               print("::error::host invalido na SUPABASE_DB_URL", file=sys.stderr)
               sys.exit(1)
+          import subprocess
+          base = "postgresql://postgres.gnosjzdguifktkspxwkt:{}@aws-0-us-west-2.pooler.supabase.com:5432/postgres"
+          escolhida = None
+          for indice, cand in enumerate(candidatos, 1):
+              url_teste = base.format(quote(cand, safe=""))
+              try:
+                  teste = subprocess.run(
+                      ["psql", url_teste, "-Atc", "select 1"],
+                      stdout=subprocess.DEVNULL,
+                      stderr=subprocess.DEVNULL,
+                      timeout=25,
+                      env={**os.environ, "PGCONNECT_TIMEOUT": "10"},
+                  )
+              except Exception:
+                  continue
+              if teste.returncode == 0:
+                  escolhida = (indice, cand, url_teste)
+                  break
+          if escolhida is None:
+              tamanhos = ",".join(str(len(c)) for c in candidatos)
+              print(f"::error::Nenhuma forma da senha conectou ao pooler. Recopie a senha real em Settings > Database (tamanhos testados: {tamanhos})", file=sys.stderr)
+              sys.exit(1)
+          indice, senha, DB_URL = escolhida
           # Diagnostico seguro: nunca imprime a senha, apenas o tamanho.
-          print(f"### Origem: host={partes.hostname} usuario={usuario} senha_com={len(senha)}_caracteres", file=sys.stderr)
-          print(
-              "postgresql://postgres.gnosjzdguifktkspxwkt:"
-              + quote(senha, safe="")
-              + "@aws-0-us-west-2.pooler.supabase.com:5432/postgres"
-          )
+          print(f"### Origem: host={partes.hostname} usuario={usuario} senha_com={len(senha)}_caracteres forma={indice}/{len(candidatos)}", file=sys.stderr)
+          print(DB_URL)
           PY
           )"
           echo "::add-mask::$DB_URL"

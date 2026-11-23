@@ -7,12 +7,21 @@ import { GraficoDistribuicao, type ItemDistribuicao } from "@/components/Grafico
 import { tempoMedioDesde } from "@/lib/tempo";
 import { anosPromessa, fimMesAtualBR, MESES, mesAtualBR } from "@/lib/promessa";
 import { dataBR } from "@/lib/data";
-import { calcularJovem } from "@/lib/jovem";
+import { calcularJovem, RAMO_JOVEM } from "@/lib/jovem";
 
 export const instant = false;
 
 const SEM_SITUACAO = "Sem situação";
 const SEM_RAMO = "Sem ramo";
+
+// Ramos juvenis são fixos, independentemente do cadastro da tabela public.ramo.
+const RAMOS_JOVENS: Array<{ id: number; rotulo: string }> = [
+  { id: RAMO_JOVEM.filhotes, rotulo: "Filhotes" },
+  { id: RAMO_JOVEM.lobinho, rotulo: "Lobinho" },
+  { id: RAMO_JOVEM.escoteiro, rotulo: "Escoteiro" },
+  { id: RAMO_JOVEM.senior, rotulo: "Sênior" },
+  { id: RAMO_JOVEM.pioneiro, rotulo: "Pioneiro" },
+];
 
 // Ordem fixa das situações no gráfico da Home. Situações fora desta lista
 // (e "Sem situação") vão para o fim, em ordem alfabética.
@@ -186,7 +195,18 @@ export default async function Home() {
   };
 
   const adultosPorRamo = distribuirPorRamo((pessoasBrutas.data ?? []) as RegistroRamo[]);
-  const jovensPorRamo = distribuirPorRamo((jovensBruto.data ?? []) as RegistroRamo[]);
+
+  const contagemJovens = new Map<number, number>();
+  ((jovensBruto.data ?? []) as RegistroRamo[]).forEach((jovem) => {
+    if (jovem.idramo != null) {
+      contagemJovens.set(jovem.idramo, (contagemJovens.get(jovem.idramo) ?? 0) + 1);
+    }
+  });
+  const jovensPorRamo: ItemDistribuicao[] = RAMOS_JOVENS.map((ramo) => ({
+    rotulo: ramo.rotulo,
+    quantidade: contagemJovens.get(ramo.id) ?? 0,
+  }));
+
   const total = (itensRamo: ItemDistribuicao[]) =>
     itensRamo.reduce((soma, item) => soma + item.quantidade, 0);
 

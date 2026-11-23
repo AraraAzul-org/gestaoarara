@@ -144,8 +144,9 @@ export default async function Ajuda() {
             </li>
             <li>
               <strong>Adultos por ramo e Jovens por ramo:</strong> para dirigentes, dois gráficos adicionais mostram o
-              total de adultos ativos do grupo e de jovens ativos em cada ramo. Quem está sem ramo aparece em “Sem
-              ramo”. Com isso o Dashboard passa a ter três gráficos.
+              total de adultos ativos do grupo em cada ramo (inclusive “Sem ramo”) e de jovens ativos somente em
+              Filhotes, Lobinho, Escoteiro, Sênior e Pioneiro — ramos fixos, independentemente do cadastro da tabela de
+              ramos. Com isso o Dashboard passa a ter três gráficos.
             </li>
             <li>
               <strong>Promessas do ramo:</strong> para escotistas, mostra quem completa anos de promessa no mês atual,

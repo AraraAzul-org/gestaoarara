@@ -145,7 +145,7 @@ export default async function Ajuda() {
               Resultados. A antiga tabela de associados não é mais exibida.
             </li>
             <li>
-              <strong>Adultos por ramo e Jovens por ramo:</strong> para dirigentes, dois gráficos adicionais mostram o
+              <strong>Associados por Ramos e Jovens por ramo:</strong> para dirigentes, dois gráficos adicionais mostram o
               total de adultos ativos do grupo em cada ramo (inclusive “Sem ramo”) e de jovens ativos somente em
               Filhotes, Lobinho, Escoteiro, Sênior e Pioneiro — ramos fixos, independentemente do cadastro da tabela de
               ramos. Com isso o Dashboard passa a ter três gráficos. O gráfico de jovens tem filtro por ramo: o dirigente

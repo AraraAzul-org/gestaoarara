@@ -37,7 +37,7 @@ export default async function DetalheLenco({
   return (
     <Shell>
       <main className="max-w-4xl p-4">
-        <Voltar href={`/lencos${lenco.uf ? `?uf=${encodeURIComponent(lenco.uf)}` : ""}`} />
+        <Voltar href={podeEditar ? "/lencos/cadastro" : "/lencos"} />
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-xl font-semibold text-azul">Cadastro do lenço</h1>
@@ -46,8 +46,8 @@ export default async function DetalheLenco({
               {lenco.uf || "—"} · {lenco.data ? dataBR(lenco.data) : "—"}
             </p>
           </div>
-          <Link href="/lencos" className="text-sm text-azul underline">
-            Voltar para Lenços
+          <Link href={podeEditar ? "/lencos/cadastro" : "/lencos"} className="text-sm text-azul underline">
+            {podeEditar ? "Voltar para cadastro" : "Voltar para Lenços"}
           </Link>
         </div>
 

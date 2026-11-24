@@ -32,9 +32,10 @@ async function exigirCadastro() {
   return { supabase, eu };
 }
 
-function voltar(tipo: "ok" | "erro", mensagem: string): never {
+function voltarCadastro(tipo: "ok" | "erro", mensagem: string): never {
   revalidatePath("/lencos");
-  redirect(`/lencos?${tipo}=${encodeURIComponent(mensagem)}`);
+  revalidatePath("/lencos/cadastro");
+  redirect(`/lencos/cadastro?${tipo}=${encodeURIComponent(mensagem)}`);
 }
 
 function lerCampos(f: FormData) {
@@ -44,10 +45,10 @@ function lerCampos(f: FormData) {
     dados[nome] = valor || null;
   }
   if (dados.numero && dados.numero.length > 4) {
-    voltar("erro", "O número do lenço deve ter no máximo 4 caracteres.");
+    voltarCadastro("erro", "O número do lenço deve ter no máximo 4 caracteres.");
   }
-  if (dados.uf && dados.uf.length !== 2) voltar("erro", "Informe uma UF válida.");
-  if (dados.data && !dataISOValida(dados.data)) voltar("erro", "Informe uma data válida.");
+  if (dados.uf && dados.uf.length !== 2) voltarCadastro("erro", "Informe uma UF válida.");
+  if (dados.data && !dataISOValida(dados.data)) voltarCadastro("erro", "Informe uma data válida.");
   dados.observacao = String(f.get("observacao") ?? "").trim() || null;
   return dados;
 }
@@ -97,7 +98,7 @@ export async function criarLenco(f: FormData) {
     eu.idusuario,
   );
   if (fotoLenco.erro || fotoEntrega.erro) {
-    voltar("erro", fotoLenco.erro ?? fotoEntrega.erro ?? "Erro nas fotos.");
+    voltarCadastro("erro", fotoLenco.erro ?? fotoEntrega.erro ?? "Erro nas fotos.");
   }
 
   const { error } = await supabase.from("lenco").insert({
@@ -109,14 +110,14 @@ export async function criarLenco(f: FormData) {
   if (error) {
     const enviadas = [fotoLenco.caminho, fotoEntrega.caminho].filter(Boolean) as string[];
     if (enviadas.length) await supabase.storage.from(BUCKET_LENCOS).remove(enviadas);
-    voltar("erro", "Não foi possível cadastrar o lenço.");
+    voltarCadastro("erro", "Não foi possível cadastrar o lenço.");
   }
-  voltar("ok", "Lenço cadastrado.");
+  voltarCadastro("ok", "Lenço cadastrado.");
 }
 
 export async function atualizarLenco(id: number, f: FormData) {
   const { supabase, eu } = await exigirCadastro();
-  if (!Number.isInteger(id) || id <= 0) voltar("erro", "Pedido inválido.");
+  if (!Number.isInteger(id) || id <= 0) redirect("/lencos/cadastro?erro=Pedido+inv%C3%A1lido.");
   const dados = lerCampos(f);
 
   const fotoLenco = await enviarFoto(
@@ -132,7 +133,7 @@ export async function atualizarLenco(id: number, f: FormData) {
     eu.idusuario,
   );
   if (fotoLenco.erro || fotoEntrega.erro) {
-    voltar("erro", fotoLenco.erro ?? fotoEntrega.erro ?? "Erro nas fotos.");
+    voltarCadastro("erro", fotoLenco.erro ?? fotoEntrega.erro ?? "Erro nas fotos.");
   }
 
   const { error } = await supabase
@@ -145,28 +146,28 @@ export async function atualizarLenco(id: number, f: FormData) {
       alteradoidusuario: eu.idusuario,
     })
     .eq("idlenco", id);
-  if (error) voltar("erro", "Não foi possível salvar o cadastro.");
+  if (error) voltarCadastro("erro", "Não foi possível salvar o cadastro.");
 
   revalidatePath("/lencos");
   revalidatePath(`/lencos/${id}`);
-  redirect(`/lencos/${id}?ok=${encodeURIComponent("Cadastro salvo.")}`);
+  redirect(`/lencos/cadastro?ok=${encodeURIComponent("Cadastro salvo.")}`);
 }
 
 export async function excluirLenco(id: number) {
   const { supabase } = await exigirCadastro();
-  if (!Number.isInteger(id) || id <= 0) voltar("erro", "Pedido inválido.");
+  if (!Number.isInteger(id) || id <= 0) voltarCadastro("erro", "Pedido inválido.");
 
   const { data: alvo } = await supabase
     .from("lenco")
     .select("fotolenco, fotoentrega")
     .eq("idlenco", id)
     .maybeSingle();
-  if (!alvo) voltar("erro", "Cadastro não encontrado.");
+  if (!alvo) voltarCadastro("erro", "Cadastro não encontrado.");
 
   const { error } = await supabase.from("lenco").delete().eq("idlenco", id);
-  if (error) voltar("erro", "Não foi possível excluir o cadastro.");
+  if (error) voltarCadastro("erro", "Não foi possível excluir o cadastro.");
 
   const caminhos = [alvo.fotolenco, alvo.fotoentrega].filter(Boolean) as string[];
   if (caminhos.length) await supabase.storage.from(BUCKET_LENCOS).remove(caminhos);
-  voltar("ok", "Cadastro excluído.");
+  voltarCadastro("ok", "Cadastro excluído.");
 }

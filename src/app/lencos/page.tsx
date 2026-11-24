@@ -99,9 +99,7 @@ export default async function Lencos({
                 <p className="mt-2"><strong>Atividade:</strong> {txt(ultimo.nomeatividade)}</p>
                 <p><strong>Data:</strong> {ultimo.data ? dataBR(ultimo.data) : "—"}</p>
                 {ultimo.observacao && <p className="mt-2 whitespace-pre-line">{ultimo.observacao}</p>}
-                <Link href={`/lencos/${ultimo.idlenco}`} className="mt-3 inline-block text-azul underline">
-                  Ver cadastro
-                </Link>
+
               </div>
             </div>
           )}
@@ -145,7 +143,7 @@ export default async function Lencos({
               <table className="w-full text-left text-sm">
                 <thead className="bg-azul text-white">
                   <tr>
-                    {["Data", "Grupo", "Nº", "UF", "Escoteiro", "Arara Azul", "Atividade", ""].map((h) => (
+                    {["Data", "Grupo", "Nº", "UF", "Escoteiro", "Arara Azul", "Atividade"].map((h) => (
                       <th key={h} className="p-2 font-medium">{h}</th>
                     ))}
                   </tr>
@@ -162,11 +160,6 @@ export default async function Lencos({
                       <td className="p-2">{txt(lenco.nomeescoteiro)}</td>
                       <td className="p-2">{txt(lenco.nomeescoteiroarara)}</td>
                       <td className="p-2">{txt(lenco.nomeatividade)}</td>
-                      <td className="p-2">
-                        <Link href={`/lencos/${lenco.idlenco}`} className="whitespace-nowrap text-azul underline">
-                          Ver cadastro
-                        </Link>
-                      </td>
                     </tr>
                   ))}
                 </tbody>

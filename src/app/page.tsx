@@ -334,7 +334,7 @@ export default async function Home({
             {eu.dirigente && (
               <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
                 <div className="flex flex-wrap items-center gap-2 border-b-2 border-amarelo bg-azul p-3 text-white">
-                  <h2 className="flex-1 text-sm font-semibold">Adultos por ramo</h2>
+                  <h2 className="flex-1 text-sm font-semibold">Associados por Ramos</h2>
                   <span className="rounded bg-white/90 px-2 py-0.5 text-xs font-medium text-gray-800">
                     {total(adultosPorRamo)} {total(adultosPorRamo) === 1 ? "adulto" : "adultos"}
                   </span>

@@ -4,13 +4,13 @@ export const BUCKET_LENCOS = "lencos";
 
 export type Lenco = {
   idlenco: number;
-  grupoescoteiro: string;
-  numero: string;
-  uf: string;
-  nomeescoteiro: string;
-  nomeescoteiroarara: string;
-  nomeatividade: string;
-  data: string;
+  grupoescoteiro: string | null;
+  numero: string | null;
+  uf: string | null;
+  nomeescoteiro: string | null;
+  nomeescoteiroarara: string | null;
+  nomeatividade: string | null;
+  data: string | null;
   fotolenco: string | null;
   fotoentrega: string | null;
   observacao: string | null;

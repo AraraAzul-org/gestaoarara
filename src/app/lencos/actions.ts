@@ -8,14 +8,14 @@ import { carregarEu } from "@/lib/eu";
 import { BUCKET_LENCOS } from "@/lib/lencos";
 import { dataISOValida } from "@/lib/data";
 
-const CAMPOS_OBRIGATORIOS = [
-  ["grupoescoteiro", "Grupo escoteiro"],
-  ["numero", "Número do lenço"],
-  ["uf", "UF"],
-  ["data", "Data"],
-  ["nomeescoteiro", "Nome do escoteiro"],
-  ["nomeescoteiroarara", "Nome do escoteiro no Arara Azul"],
-  ["nomeatividade", "Nome da atividade"],
+const CAMPOS_TEXTO = [
+  "grupoescoteiro",
+  "numero",
+  "uf",
+  "data",
+  "nomeescoteiro",
+  "nomeescoteiroarara",
+  "nomeatividade",
 ] as const;
 
 const EXTENSOES: Record<string, string> = {
@@ -38,16 +38,17 @@ function voltar(tipo: "ok" | "erro", mensagem: string): never {
 }
 
 function lerCampos(f: FormData) {
-  const dados: Record<string, string> = {};
-  for (const [nome, rotulo] of CAMPOS_OBRIGATORIOS) {
+  const dados: Record<string, string | null> = {};
+  for (const nome of CAMPOS_TEXTO) {
     const valor = String(f.get(nome) ?? "").trim();
-    if (!valor) voltar("erro", `Informe: ${rotulo}.`);
-    dados[nome] = valor;
+    dados[nome] = valor || null;
   }
-  if (dados.numero.length > 4) voltar("erro", "O número do lenço deve ter no máximo 4 caracteres.");
-  if (dados.uf.length !== 2) voltar("erro", "Informe uma UF válida.");
-  if (!dataISOValida(dados.data)) voltar("erro", "Informe uma data válida.");
-  dados.observacao = String(f.get("observacao") ?? "").trim();
+  if (dados.numero && dados.numero.length > 4) {
+    voltar("erro", "O número do lenço deve ter no máximo 4 caracteres.");
+  }
+  if (dados.uf && dados.uf.length !== 2) voltar("erro", "Informe uma UF válida.");
+  if (dados.data && !dataISOValida(dados.data)) voltar("erro", "Informe uma data válida.");
+  dados.observacao = String(f.get("observacao") ?? "").trim() || null;
   return dados;
 }
 

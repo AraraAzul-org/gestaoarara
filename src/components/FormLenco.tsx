@@ -64,7 +64,12 @@ export function FormLenco({
       <input type="hidden" name="fotolencoatual" value={valores?.fotolenco ?? ""} />
       <input type="hidden" name="fotoentregaatual" value={valores?.fotoentrega ?? ""} />
 
-      <CampoTexto nome="grupoescoteiro" titulo="Grupo escoteiro" valor={valores?.grupoescoteiro} />
+      <CampoTexto
+        nome="grupoescoteiro"
+        titulo="Grupo escoteiro"
+        valor={valores?.grupoescoteiro}
+        obrigatorio={false}
+      />
 
       <div className="flex gap-4">
         <CampoTexto
@@ -73,10 +78,11 @@ export function FormLenco({
           valor={valores?.numero}
           maxLength={4}
           compacto
+          obrigatorio={false}
         />
         <label className="flex w-24 flex-col gap-1">
           <span className={rotulo}>UF</span>
-          <select name="uf" required defaultValue={valores?.uf ?? ""} className={campo}>
+          <select name="uf" defaultValue={valores?.uf ?? ""} className={campo}>
             <option value="">Selecione</option>
             {UFS.map((uf) => (
               <option key={uf} value={uf}>
@@ -87,19 +93,32 @@ export function FormLenco({
         </label>
       </div>
 
-      <CampoTexto nome="data" titulo="Data" valor={valores?.data?.slice(0, 10)} tipo="date" />
+      <CampoTexto
+        nome="data"
+        titulo="Data"
+        valor={valores?.data?.slice(0, 10)}
+        tipo="date"
+        obrigatorio={false}
+      />
 
-      <CampoTexto nome="nomeescoteiro" titulo="Nome do escoteiro" valor={valores?.nomeescoteiro} />
+      <CampoTexto
+        nome="nomeescoteiro"
+        titulo="Nome do escoteiro"
+        valor={valores?.nomeescoteiro}
+        obrigatorio={false}
+      />
       <CampoTexto
         nome="nomeescoteiroarara"
         titulo="Nome do escoteiro no Arara Azul"
         valor={valores?.nomeescoteiroarara}
+        obrigatorio={false}
       />
 
       <CampoTexto
         nome="nomeatividade"
         titulo="Nome da atividade"
         valor={valores?.nomeatividade}
+        obrigatorio={false}
         extenso
       />
       <CampoTexto

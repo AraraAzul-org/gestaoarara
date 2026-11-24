@@ -22,6 +22,7 @@ export default async function Lencos({
 
   const params = await searchParams;
   const uf = (params.uf ?? "").trim().slice(0, 2).toUpperCase();
+  const txt = (v: string | null | undefined) => (v && v.trim() ? v : "—");
 
   const { data } = await supabase
     .from("lenco")
@@ -36,12 +37,13 @@ export default async function Lencos({
   const ultimo = comFotos[0];
   const porUF = new Map<string, number>();
   for (const lenco of comFotos) {
-    porUF.set(lenco.uf, (porUF.get(lenco.uf) ?? 0) + 1);
+    const chave = lenco.uf?.trim() ? lenco.uf : "—";
+    porUF.set(chave, (porUF.get(chave) ?? 0) + 1);
   }
   const itensUF = [...porUF.entries()]
     .map(([rotulo, quantidade]) => ({ rotulo, quantidade }))
     .sort((a, b) => b.quantidade - a.quantidade || a.rotulo.localeCompare(b.rotulo, "pt-BR"));
-  const filtrados = uf ? comFotos.filter((lenco) => lenco.uf === uf) : comFotos;
+  const filtrados = uf ? comFotos.filter((lenco) => (lenco.uf ?? "") === uf) : comFotos;
 
   return (
     <Shell>
@@ -90,12 +92,12 @@ export default async function Lencos({
               </div>
               <div className="text-sm text-gray-700">
                 <p className="text-base font-semibold text-gray-900">
-                  Grupo Escoteiro {ultimo.grupoescoteiro} · Lenço nº {ultimo.numero} · {ultimo.uf}
+                  Grupo Escoteiro {txt(ultimo.grupoescoteiro)} · Lenço nº {txt(ultimo.numero)} · {txt(ultimo.uf)}
                 </p>
-                <p className="mt-2"><strong>Escoteiro:</strong> {ultimo.nomeescoteiro}</p>
-                <p><strong>No Arara Azul:</strong> {ultimo.nomeescoteiroarara}</p>
-                <p className="mt-2"><strong>Atividade:</strong> {ultimo.nomeatividade}</p>
-                <p><strong>Data:</strong> {dataBR(ultimo.data)}</p>
+                <p className="mt-2"><strong>Escoteiro:</strong> {txt(ultimo.nomeescoteiro)}</p>
+                <p><strong>No Arara Azul:</strong> {txt(ultimo.nomeescoteiroarara)}</p>
+                <p className="mt-2"><strong>Atividade:</strong> {txt(ultimo.nomeatividade)}</p>
+                <p><strong>Data:</strong> {ultimo.data ? dataBR(ultimo.data) : "—"}</p>
                 {ultimo.observacao && <p className="mt-2 whitespace-pre-line">{ultimo.observacao}</p>}
                 <Link href={`/lencos/${ultimo.idlenco}`} className="mt-3 inline-block text-azul underline">
                   Ver cadastro
@@ -151,13 +153,15 @@ export default async function Lencos({
                 <tbody className="divide-y">
                   {filtrados.map((lenco) => (
                     <tr key={lenco.idlenco} className="hover:bg-gray-50/70">
-                      <td className="whitespace-nowrap p-2 text-gray-600">{dataBR(lenco.data)}</td>
-                      <td className="p-2">{lenco.grupoescoteiro}</td>
-                      <td className="p-2">{lenco.numero}</td>
-                      <td className="p-2 font-medium">{lenco.uf}</td>
-                      <td className="p-2">{lenco.nomeescoteiro}</td>
-                      <td className="p-2">{lenco.nomeescoteiroarara}</td>
-                      <td className="p-2">{lenco.nomeatividade}</td>
+                      <td className="whitespace-nowrap p-2 text-gray-600">
+                        {lenco.data ? dataBR(lenco.data) : "—"}
+                      </td>
+                      <td className="p-2">{txt(lenco.grupoescoteiro)}</td>
+                      <td className="p-2">{txt(lenco.numero)}</td>
+                      <td className="p-2 font-medium">{txt(lenco.uf)}</td>
+                      <td className="p-2">{txt(lenco.nomeescoteiro)}</td>
+                      <td className="p-2">{txt(lenco.nomeescoteiroarara)}</td>
+                      <td className="p-2">{txt(lenco.nomeatividade)}</td>
                       <td className="p-2">
                         <Link href={`/lencos/${lenco.idlenco}`} className="whitespace-nowrap text-azul underline">
                           Ver cadastro

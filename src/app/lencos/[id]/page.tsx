@@ -37,12 +37,13 @@ export default async function DetalheLenco({
   return (
     <Shell>
       <main className="max-w-4xl p-4">
-        <Voltar href={`/lencos?uf=${encodeURIComponent(lenco.uf)}`} />
+        <Voltar href={`/lencos${lenco.uf ? `?uf=${encodeURIComponent(lenco.uf)}` : ""}`} />
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-xl font-semibold text-azul">Cadastro do lenço</h1>
             <p className="mt-1 text-sm text-gray-600">
-              Grupo Escoteiro {lenco.grupoescoteiro} · Lenço nº {lenco.numero} · {lenco.uf} · {dataBR(lenco.data)}
+              Grupo Escoteiro {lenco.grupoescoteiro || "—"} · Lenço nº {lenco.numero || "—"} ·{" "}
+              {lenco.uf || "—"} · {lenco.data ? dataBR(lenco.data) : "—"}
             </p>
           </div>
           <Link href="/lencos" className="text-sm text-azul underline">
@@ -54,9 +55,9 @@ export default async function DetalheLenco({
         {ok && <p className="mt-3 rounded bg-green-50 p-2 text-sm text-green-800">{ok}</p>}
 
         <section className="mt-5 grid gap-3 rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-700 shadow-sm sm:grid-cols-2">
-          <p><strong>Escoteiro:</strong> {lenco.nomeescoteiro}</p>
-          <p><strong>No Arara Azul:</strong> {lenco.nomeescoteiroarara}</p>
-          <p className="sm:col-span-2"><strong>Atividade:</strong> {lenco.nomeatividade}</p>
+          <p><strong>Escoteiro:</strong> {lenco.nomeescoteiro || "—"}</p>
+          <p><strong>No Arara Azul:</strong> {lenco.nomeescoteiroarara || "—"}</p>
+          <p className="sm:col-span-2"><strong>Atividade:</strong> {lenco.nomeatividade || "—"}</p>
           {lenco.observacao && (
             <p className="sm:col-span-2 whitespace-pre-line"><strong>Observação:</strong> {lenco.observacao}</p>
           )}

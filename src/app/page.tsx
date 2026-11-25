@@ -4,10 +4,10 @@ import { carregarSessao } from "@/lib/eu";
 import { primeiraRota } from "@/lib/menu";
 import { Shell } from "@/components/Shell";
 import { GraficoDistribuicao, type ItemDistribuicao } from "@/components/GraficoDistribuicao";
-import { tempoMedioDesde } from "@/lib/tempo";
+import { tempoDesde, tempoMedioDesde } from "@/lib/tempo";
 import { anosPromessa, fimMesAtualBR, MESES, mesAtualBR } from "@/lib/promessa";
 import { dataBR } from "@/lib/data";
-import { calcularJovem, RAMO_JOVEM } from "@/lib/jovem";
+import { calcularJovem, dataPromessaOuAcolhida, RAMO_JOVEM } from "@/lib/jovem";
 
 export const instant = false;
 
@@ -61,6 +61,7 @@ type PromessaAdulto = {
   idramo: number | null;
   datapromessa: string | null;
   deducaopromessa: number | null;
+  datasituacao: string | null;
 };
 
 type PromessaJovem = {
@@ -68,6 +69,7 @@ type PromessaJovem = {
   nome: string;
   registro: string | null;
   idramo: number | null;
+  dataregistro: string | null;
   dataacolhida: string | null;
   datapassagemlobinho: string | null;
   datapromessalobinho: string | null;
@@ -92,6 +94,14 @@ type LinhaPromessa = {
   deducao: number | null;
   anosPromessa: number | null;
   anosNoRamo: number | null;
+};
+
+type SemPromessa = {
+  tipo: "Adulto" | "Jovem";
+  nome: string;
+  registro: string | null;
+  dataRegistro: string | null;
+  situacao: string;
 };
 
 const mesDaData = (iso: string | null) => (iso ? Number(String(iso).slice(5, 7)) : null);
@@ -239,6 +249,7 @@ export default async function Home({
   // Escotistas do grupo veem, na home, quem completa anos de promessa no mês
   // atual no mesmo ramo. Sem filtro de situação: apenas mês e ramo.
   let promessas: LinhaPromessa[] = [];
+  let semPromessa: SemPromessa[] = [];
   let nomeRamoEscotista = "—";
   if (eu.escotista) {
     const idramo = eu.idramo ?? -1;
@@ -247,14 +258,14 @@ export default async function Home({
     const [adultosBruto, jovensBruto, ramo] = await Promise.all([
       supabase
         .from("usuario")
-        .select("idusuario, nome, registro, idramo, datapromessa, deducaopromessa")
+        .select("idusuario, nome, registro, idramo, datapromessa, deducaopromessa, datasituacao")
         .eq("ativo", true)
         .eq("membrogrupo", true)
         .eq("idramo", idramo),
       supabase
         .from("jovem")
         .select(
-          "idjovem, nome, registro, idramo, dataacolhida, datapassagemlobinho, datapromessalobinho, deducaolobinho, datapassagemescoteiro, datapromessaescoteiro, deducaoescoteiro, datapassagemsenior, datapromessasenior, deducaosenior, datapassagempioneiro, datapromessapioneiro, deducaopioneiro",
+          "idjovem, nome, registro, idramo, dataregistro, dataacolhida, datapassagemlobinho, datapromessalobinho, deducaolobinho, datapassagemescoteiro, datapromessaescoteiro, deducaoescoteiro, datapassagemsenior, datapromessasenior, deducaosenior, datapassagempioneiro, datapromessapioneiro, deducaopioneiro",
         )
         .eq("ativo", true)
         .eq("idramo", idramo),
@@ -279,14 +290,14 @@ export default async function Home({
       }));
 
     const linhasJovens: LinhaPromessa[] = ((jovensBruto.data ?? []) as PromessaJovem[])
-      .map((j) => ({ j, calculo: calcularJovem(j, fim) }))
-      .filter(({ calculo }) => mesDaData(calculo.dataConsiderada) === mes)
-      .map(({ j, calculo }) => ({
+      .map((j) => ({ j, calculo: calcularJovem(j, fim), data: dataPromessaOuAcolhida(j) }))
+      .filter(({ data }) => !!data && mesDaData(data) === mes)
+      .map(({ j, calculo, data }) => ({
         tipo: "Jovem",
         nome: j.nome,
         registro: j.registro,
         idramo: j.idramo,
-        data: calculo.dataConsiderada,
+        data,
         deducao: calculo.deducaoTotal,
         anosPromessa: calculo.anosPromessa,
         anosNoRamo: calculo.anosNoRamo,
@@ -295,6 +306,29 @@ export default async function Home({
     promessas = [...linhasAdultos, ...linhasJovens].sort((a, b) =>
       a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" }),
     );
+
+    // Mesma regra da tela Promessas: quem não tem promessa (ou acolhida, no
+    // caso dos filhotes), independentemente do mês.
+    semPromessa = [
+      ...((adultosBruto.data ?? []) as PromessaAdulto[])
+        .filter((a) => !a.datapromessa)
+        .map((a) => ({
+          tipo: "Adulto" as const,
+          nome: a.nome,
+          registro: a.registro,
+          dataRegistro: a.datasituacao,
+          situacao: "Sem promessa",
+        })),
+      ...((jovensBruto.data ?? []) as PromessaJovem[])
+        .filter((j) => !dataPromessaOuAcolhida(j))
+        .map((j) => ({
+          tipo: "Jovem" as const,
+          nome: j.nome,
+          registro: j.registro,
+          dataRegistro: j.dataregistro,
+          situacao: j.idramo === RAMO_JOVEM.filhotes ? "Sem acolhida" : "Sem promessa",
+        })),
+    ].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" }));
   }
 
   return (
@@ -427,6 +461,54 @@ export default async function Home({
                         <td className="whitespace-nowrap px-4 py-2 text-gray-600">{anos(p.deducao)}</td>
                         <td className="whitespace-nowrap px-4 py-2 text-right text-gray-700">{anos(p.anosPromessa)}</td>
                         <td className="whitespace-nowrap px-4 py-2 text-right text-gray-700">{anos(p.anosNoRamo)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        )}
+
+        {eu.escotista && (
+          <section className="mt-6 overflow-hidden rounded-lg border border-gray-200 border-l-4 border-l-azul bg-white shadow-sm">
+            <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 bg-gray-50/60 px-4 py-2.5">
+              <h2 className="flex-1 text-sm font-semibold text-azul">Sem promessa / acolhida</h2>
+              <span className="text-xs text-gray-500">{nomeRamoEscotista}</span>
+              <span className="rounded bg-white px-2 py-0.5 text-xs font-medium text-gray-700 ring-1 ring-gray-200">
+                {semPromessa.length} {semPromessa.length === 1 ? "pessoa" : "pessoas"}
+              </span>
+            </div>
+            <p className="px-4 pt-2 text-xs text-gray-600">
+              Adultos e jovens ativos do seu ramo sem promessa registrada; para filhotes, sem acolhida. Esta lista não é
+              afetada pelo mês.
+            </p>
+            {!semPromessa.length ? (
+              <p className="px-4 py-8 text-center text-sm text-gray-500">
+                Ninguém do ramo {nomeRamoEscotista} está sem promessa ou acolhida.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+                      <th className="px-4 py-2 font-medium">Nome</th>
+                      <th className="px-4 py-2 font-medium">Tipo</th>
+                      <th className="px-4 py-2 font-medium">Registro</th>
+                      <th className="px-4 py-2 font-medium">Data do registro</th>
+                      <th className="px-4 py-2 font-medium">Tempo até hoje</th>
+                      <th className="px-4 py-2 font-medium">Situação</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {semPromessa.map((p, indice) => (
+                      <tr key={`${p.tipo}-${p.registro ?? p.nome}-${indice}`}>
+                        <td className="px-4 py-2 font-medium text-gray-900">{p.nome}</td>
+                        <td className="whitespace-nowrap px-4 py-2 text-gray-600">{p.tipo}</td>
+                        <td className="whitespace-nowrap px-4 py-2 text-gray-600">{p.registro ?? "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-2 text-gray-600">{dataBR(p.dataRegistro)}</td>
+                        <td className="whitespace-nowrap px-4 py-2 text-gray-700">{tempoDesde(p.dataRegistro)}</td>
+                        <td className="whitespace-nowrap px-4 py-2 text-amber-700">{p.situacao}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -152,7 +152,8 @@ export default async function DocumentacaoTecnica() {
             </li>
             <li>
               <strong>Escotista:</strong> <code>membrogrupo = true</code> sem a liberação <code>resultados</code>. No
-              dashboard, vê o gráfico de jovens e as promessas do próprio ramo (<code>usuario.idramo</code>).
+              dashboard, vê o gráfico de jovens, as promessas do próprio ramo (<code>usuario.idramo</code>) e a lista
+              de adultos/jovens do ramo sem promessa (ou sem acolhida, para filhotes).
             </li>
             <li>
               Criação/alteração de login e e-mail passa pela Edge Function <code>gerir-acesso</code> (v4,{" "}

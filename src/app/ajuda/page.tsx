@@ -158,6 +158,11 @@ export default async function Ajuda() {
               tem liberação de Resultados não vê esse bloco, pois já acompanha os resultados gerais.
             </li>
             <li>
+              <strong>Sem promessa / acolhida:</strong> logo abaixo, para escotistas, lista os adultos e jovens ativos
+              do próprio ramo que ainda não têm promessa registrada — ou acolhida, no caso dos filhotes — com Nome,
+              Tipo, Registro, Data do registro, Tempo até hoje e Situação. A lista não depende do mês.
+            </li>
+            <li>
               Associados que não fazem parte do grupo veem o aviso de que seu acesso está limitado a Meus assessorados.
             </li>
           </Itens>

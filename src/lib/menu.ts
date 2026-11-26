@@ -16,7 +16,7 @@ export const ITENS_MENU: ItemMenu[] = [
   { chave: "lencos", rotulo: "Lenços", href: "/lencos", grupo: "Geral" },
   {
     chave: "fornecedoresconsulta",
-    rotulo: "Consulta de fornecedores",
+    rotulo: "Fornecedores",
     href: "/consulta-fornecedores",
     grupo: "Geral",
   },

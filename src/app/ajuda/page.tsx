@@ -118,7 +118,7 @@ export default async function Ajuda() {
               Use o menu lateral para navegar. O grupo <strong>Cadastros</strong> começa fechado: clique no ▶ para abrir
               o submenu, onde ficam Jovens, Associados, Ramos, Funções, Situações, Fornecedores, Avaliações,
               Questionários e Lenços. A consulta somente leitura de fornecedores fica fora desse grupo, no item{" "}
-              <strong>Consulta de fornecedores</strong>. O item com fundo branco e texto azul indica a tela atual.
+              <strong>Fornecedores</strong> (somente leitura). O item com fundo branco e texto azul indica a tela atual.
             </li>
             <li>
               Se aparecer “Nenhum menu liberado” ou “Acesso não liberado”, seu cadastro ainda não tem liberações ou está
@@ -284,12 +284,13 @@ export default async function Ajuda() {
             <li>
               <strong>Fornecedores:</strong> cadastro de serviços, materiais e locações. Campos: Nome, Tipo (Serviço,
               Material ou Locação), Endereço, Localização, Telefone, Celular, Nome do contato, E-mail e Descrição dos
-              serviços/materiais. Nome é obrigatório e é preciso informar telefone ou celular. Em <strong>Consultar</strong>,
+              serviços/materiais. Nome é obrigatório e é preciso informar telefone ou celular: telefone com máscara{" "}
+              <code>(99) 9999-9999</code> e celular com máscara <code>(99) 99999-9999</code>. Em <strong>Consultar</strong>,
               digite uma palavra do nome ou da descrição (por exemplo, <code>cisal</code>) e clique em{" "}
               <strong>Buscar</strong>: a busca ignora acentos, ordena por relevância e aceita aspas para frase exata,{" "}
               <code>OR</code> e <code>-</code>. Use <strong>Novo fornecedor</strong> para incluir e, em cada registro,{" "}
               <strong>Editar</strong> ou <strong>Excluir</strong>. O cadastro só aparece para quem tem a liberação específica
-              “Fornecedores”. Em <strong>Consulta de fornecedores</strong>, fora de Cadastros, a mesma busca funciona sem botões de
+              “Fornecedores”. Em <strong>Fornecedores</strong>, fora de Cadastros, a mesma busca funciona sem botões de
                alteração; essa liberação pode ser dada só a quem deve consultar.
             </li>
             <li>

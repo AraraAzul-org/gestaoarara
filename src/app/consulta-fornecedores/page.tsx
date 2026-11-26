@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { carregarEu } from "@/lib/eu";
 import { Shell } from "@/components/Shell";
-import { textoFornecedor, type Fornecedor } from "@/lib/fornecedores";
+import { linkWhatsappFornecedor, textoFornecedor, type Fornecedor } from "@/lib/fornecedores";
 
 export const instant = false;
 
@@ -93,6 +93,15 @@ export default async function ConsultaFornecedores({
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="flex-1 font-semibold text-gray-900">{f.nome}</span>
                   <span className="rounded bg-azul/10 px-2 py-0.5 text-xs font-medium text-azul">{f.tipo}</span>
+                  <a
+                    href={linkWhatsappFornecedor(f)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Compartilhar os dados deste fornecedor no WhatsApp"
+                    className="inline-flex items-center gap-1 rounded bg-[#25D366] px-2 py-1 text-xs font-medium text-white hover:bg-[#1ebe5d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]/50"
+                  >
+                    WhatsApp
+                  </a>
                 </div>
                 <div className="mt-2 grid gap-x-6 gap-y-1 text-sm text-gray-700 sm:grid-cols-2">
                   <p><strong>Endereço:</strong> {textoFornecedor(f.endereco)}</p>

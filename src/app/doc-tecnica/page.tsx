@@ -143,7 +143,10 @@ export default async function DocumentacaoTecnica() {
             </li>
             <li>
               <strong>Menus e rotas:</strong> a fonte da verdade é <code>usuario_menu.chave</code> com{" "}
-              <code>liberado = true</code>. Esconder um item do menu também bloqueia a rota.
+              <code>liberado = true</code>. Esconder um item do menu também bloqueia a rota. Em{" "}
+              <code>fornecedor</code>, a RLS usa <code>private.pode_acesso(&apos;fornecedores&apos;)</code>: a mesma
+              liberação controla menu, rota, leitura e gravação. A busca usa <code>websearch_to_tsquery</code> com
+              configuração <code>portuguese</code> e índice GIN na coluna gerada <code>busca</code>.
             </li>
             <li>
               <strong>Dirigente:</strong> <code>cargo.avalia = true</code> <em>e</em> <code>usuario.linha =
@@ -183,6 +186,7 @@ export default async function DocumentacaoTecnica() {
                   ["usuario_menu", "731", "Liberações de menu por usuário"],
                   ["jovem", "77", "Cadastro de jovens e datas de promessa"],
                   ["ramo / situacao / cargo", "7 / 7 / 10", "Tabelas de apoio"],
+                  ["fornecedor", "0", "Fornecedores e busca textual por nome/descrição"],
                   ["questionario / etapa", "2 / 8", "Questionários e etapas (Pontua / Não Pontua)"],
                   ["pergunta / pontuacao", "32 / 124", "Perguntas e opções com nota"],
                   ["resposta / avaliacao / avaliacaousuario", "124 / 1 / 5", "Respostas e ciclos de avaliação"],

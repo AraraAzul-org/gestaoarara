@@ -5,6 +5,7 @@ const ROTULOS: Array<{ prefixo: string; rotulo: string }> = [
   { prefixo: "/ramos", rotulo: "Ramos" },
   { prefixo: "/funcoes", rotulo: "Funções" },
   { prefixo: "/situacoes", rotulo: "Situações" },
+  { prefixo: "/fornecedores", rotulo: "Fornecedores" },
   { prefixo: "/avaliacoes", rotulo: "Avaliações" },
   { prefixo: "/perguntas", rotulo: "Questionários" },
   { prefixo: "/promessas", rotulo: "Promessas" },

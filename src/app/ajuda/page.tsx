@@ -116,7 +116,8 @@ export default async function Ajuda() {
             </li>
             <li>
               Use o menu lateral para navegar. O grupo <strong>Cadastros</strong> começa fechado: clique no ▶ para abrir
-              o submenu, onde ficam Jovens, Associados, Ramos, Funções, Situações, Avaliações, Questionários e Lenços. O
+              o submenu, onde ficam Jovens, Associados, Ramos, Funções, Situações, Fornecedores, Avaliações,
+              Questionários e Lenços. O
               item com fundo branco e texto azul indica a tela atual.
             </li>
             <li>
@@ -250,8 +251,8 @@ export default async function Ajuda() {
 
         <Secao id="cadastros" titulo="Cadastros">
           <p>
-            O submenu <strong>Cadastros</strong> reúne Jovens, Associados, Ramos, Funções, Situações, Avaliações,
-            Questionários e Lenços. Cada item pode ser liberado separadamente na tela de acessos.
+            O submenu <strong>Cadastros</strong> reúne Jovens, Associados, Ramos, Funções, Situações, Fornecedores,
+            Avaliações, Questionários e Lenços. Cada item pode ser liberado separadamente na tela de acessos.
           </p>
           <ul className="ml-5 list-disc space-y-2">
             <li>
@@ -279,6 +280,16 @@ export default async function Ajuda() {
               <strong>Adicionar</strong>, edite no próprio registro e confirme com <strong>Salvar</strong>. Para excluir,
               clique na lixeira e depois em <strong>Confirmar exclusão</strong>. Em Funções, o checkbox{" "}
               <strong>Avalia (diretor)</strong> identifica quem pode avaliar; itens em uso não podem ser excluídos.
+            </li>
+            <li>
+              <strong>Fornecedores:</strong> cadastro de serviços, materiais e locações. Campos: Nome, Tipo (Serviço,
+              Material ou Locação), Endereço, Localização, Telefone, Celular, Nome do contato, E-mail e Descrição dos
+              serviços/materiais. Nome é obrigatório e é preciso informar telefone ou celular. Em <strong>Consultar</strong>,
+              digite uma palavra do nome ou da descrição (por exemplo, <code>cisal</code>) e clique em{" "}
+              <strong>Buscar</strong>: a busca ignora acentos, ordena por relevância e aceita aspas para frase exata,{" "}
+              <code>OR</code> e <code>-</code>. Use <strong>Novo fornecedor</strong> para incluir e, em cada registro,{" "}
+              <strong>Editar</strong> ou <strong>Excluir</strong>. O menu só aparece para quem tem a liberação específica
+              “Fornecedores”.
             </li>
             <li>
               <strong>Avaliações:</strong> uma avaliação nasce como <strong>Rascunho</strong> e passa a{" "}

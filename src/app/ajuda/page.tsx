@@ -117,8 +117,8 @@ export default async function Ajuda() {
             <li>
               Use o menu lateral para navegar. O grupo <strong>Cadastros</strong> começa fechado: clique no ▶ para abrir
               o submenu, onde ficam Jovens, Associados, Ramos, Funções, Situações, Fornecedores, Avaliações,
-              Questionários e Lenços. O
-              item com fundo branco e texto azul indica a tela atual.
+              Questionários e Lenços. A consulta somente leitura de fornecedores fica fora desse grupo, no item{" "}
+              <strong>Consulta de fornecedores</strong>. O item com fundo branco e texto azul indica a tela atual.
             </li>
             <li>
               Se aparecer “Nenhum menu liberado” ou “Acesso não liberado”, seu cadastro ainda não tem liberações ou está
@@ -288,8 +288,9 @@ export default async function Ajuda() {
               digite uma palavra do nome ou da descrição (por exemplo, <code>cisal</code>) e clique em{" "}
               <strong>Buscar</strong>: a busca ignora acentos, ordena por relevância e aceita aspas para frase exata,{" "}
               <code>OR</code> e <code>-</code>. Use <strong>Novo fornecedor</strong> para incluir e, em cada registro,{" "}
-              <strong>Editar</strong> ou <strong>Excluir</strong>. O menu só aparece para quem tem a liberação específica
-              “Fornecedores”.
+              <strong>Editar</strong> ou <strong>Excluir</strong>. O cadastro só aparece para quem tem a liberação específica
+              “Fornecedores”. Em <strong>Consulta de fornecedores</strong>, fora de Cadastros, a mesma busca funciona sem botões de
+               alteração; essa liberação pode ser dada só a quem deve consultar.
             </li>
             <li>
               <strong>Avaliações:</strong> uma avaliação nasce como <strong>Rascunho</strong> e passa a{" "}

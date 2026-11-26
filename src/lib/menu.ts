@@ -14,6 +14,12 @@ export const ITENS_MENU: ItemMenu[] = [
   { chave: "jovens", rotulo: "Jovens", href: "/jovens", grupo: "Cadastros" },
   { chave: "promessas", rotulo: "Promessas", href: "/promessas", grupo: "Geral" },
   { chave: "lencos", rotulo: "Lenços", href: "/lencos", grupo: "Geral" },
+  {
+    chave: "fornecedoresconsulta",
+    rotulo: "Consulta de fornecedores",
+    href: "/consulta-fornecedores",
+    grupo: "Geral",
+  },
   { chave: "usuarios", rotulo: "Associados", href: "/usuarios", grupo: "Cadastros" },
   { chave: "ramos", rotulo: "Ramos", href: "/ramos", grupo: "Cadastros" },
   { chave: "funcoes", rotulo: "Funções", href: "/funcoes", grupo: "Cadastros" },

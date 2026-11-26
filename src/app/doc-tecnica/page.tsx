@@ -144,9 +144,11 @@ export default async function DocumentacaoTecnica() {
             <li>
               <strong>Menus e rotas:</strong> a fonte da verdade é <code>usuario_menu.chave</code> com{" "}
               <code>liberado = true</code>. Esconder um item do menu também bloqueia a rota. Em{" "}
-              <code>fornecedor</code>, a RLS usa <code>private.pode_acesso(&apos;fornecedores&apos;)</code>: a mesma
-              liberação controla menu, rota, leitura e gravação. A busca usa <code>websearch_to_tsquery</code> com
-              configuração <code>portuguese</code> e índice GIN na coluna gerada <code>busca</code>.
+              <code>fornecedor</code>, a gravação exige <code>private.pode_acesso(&apos;fornecedores&apos;)</code>,
+              enquanto a leitura aceita também <code>fornecedoresconsulta</code> numa política <code>SELECT</code>
+              separada. Assim a consulta em <code>/consulta-fornecedores</code> pode ser liberada sem dar acesso ao
+              cadastro. A busca usa <code>websearch_to_tsquery</code> com configuração <code>portuguese</code> e índice
+              GIN na coluna gerada <code>busca</code>.
             </li>
             <li>
               <strong>Dirigente:</strong> <code>cargo.avalia = true</code> <em>e</em> <code>usuario.linha =

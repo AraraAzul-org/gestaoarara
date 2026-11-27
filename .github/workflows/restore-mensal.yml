@@ -24,7 +24,7 @@ jobs:
       LOCAL_DB: postgresql://postgres:postgres@127.0.0.1:54322/postgres
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Validar segredos
         run: |

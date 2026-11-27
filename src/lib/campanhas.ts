@@ -1,3 +1,5 @@
+import { numeroMoeda } from "@/lib/moeda";
+
 export const STATUS_CAMPANHA = ["rascunho", "iniciada", "finalizada"] as const;
 export type StatusCampanha = (typeof STATUS_CAMPANHA)[number];
 
@@ -105,6 +107,15 @@ export function linhasDosBlocos(blocos: BlocoCampanha[]): LinhaBloco[] {
 
 export function totalFolhas(blocos: BlocoCampanha[]): number {
   return blocos.reduce((soma, bloco) => soma + inteiro(bloco.quantbilhetes), 0);
+}
+
+/** Valor do bloco = valor do bilhete × quantidade de folhas daquele bloco. */
+export function valorDoBloco(
+  folhas: number | string | null | undefined,
+  valorBilhete: number | string | null | undefined,
+): number {
+  const quantidade = inteiro(folhas);
+  return Math.round(numeroMoeda(valorBilhete) * quantidade * 100) / 100;
 }
 
 export function situacaoBloco(distribuicao: DistribuicaoCampanha | undefined): string {

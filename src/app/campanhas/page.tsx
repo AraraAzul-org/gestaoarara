@@ -62,13 +62,13 @@ export default async function Campanhas() {
           e os acertos.
         </p>
 
-        {eu.acessos.has("campanha") && (
+        {(eu.acessos.has("campanha") || eu.acessos.has("entregablocos")) && (
           <div className="mt-4">
             <Link
-              href="/campanha"
-              className="inline-block rounded bg-azul px-3 py-1.5 text-sm font-medium text-white hover:bg-azul-escuro"
+              href="/entrega-blocos"
+              className="inline-block rounded border border-azul bg-white px-3 py-1.5 text-sm font-medium text-azul hover:bg-azul/5"
             >
-              Nova campanha
+              Entrega de blocos
             </Link>
           </div>
         )}
@@ -136,7 +136,7 @@ function CartaoCampanha({
   return (
     <li className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
       <div className="flex flex-wrap items-center gap-2">
-        <strong className="flex-1 text-gray-900">{campanha.titulo}</strong>
+        <strong className="flex-1 text-lg font-semibold text-azul">{campanha.titulo}</strong>
         <span className={`rounded px-2 py-0.5 text-xs font-medium ${corStatus[campanha.status]}`}>
           {campanha.status}
         </span>

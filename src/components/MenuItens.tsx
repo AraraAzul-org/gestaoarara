@@ -12,7 +12,7 @@ export function MenuItens({ acessos }: { acessos: string[] }) {
   // ativo e deixar o fundo e a letra brancos.
   const base = "whitespace-nowrap rounded px-3 py-2 text-sm";
   const liberados = itensMenuOrdenados(
-    ITENS_MENU.filter((item) => acessos.includes(item.chave)),
+    ITENS_MENU.filter((item) => acessos.includes(item.chave) && !item.ocultoNoMenu),
   );
 
   // Quando duas rotas se sobrepõem (ex.: /lencos e /lencos/cadastro), só a

@@ -109,11 +109,7 @@ const mesDaData = (iso: string | null) => (iso ? Number(String(iso).slice(5, 7))
 const anos = (valor: number | null) =>
   valor === null ? "—" : `${valor} ${valor === 1 ? "ano" : "anos"}`;
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<{ ramo?: string }>;
-}) {
+export default async function Home() {
   const supabase = await createClient();
   const sessao = await carregarSessao(supabase);
   if (!sessao) redirect("/login");
@@ -132,18 +128,11 @@ export default async function Home({
 
   if (!eu.acessos.has("inicio")) redirect(primeiraRota(eu.acessos));
 
-  const params = await searchParams;
   const verResultados = eu.dirigente || eu.podeResultados;
-  // Escotistas acompanham o gráfico de jovens do próprio ramo; dirigentes podem
-  // escolher qualquer ramo (ou ver todos) e os demais perfis veem o total geral.
+  // Escotistas acompanham o gráfico de jovens do próprio ramo. Dirigentes e os
+  // demais perfis veem todos os ramos, sem filtro.
   const verJovens = eu.escotista || verResultados;
-  const ramoPedido =
-    params.ramo && Number.isInteger(Number(params.ramo)) ? Number(params.ramo) : null;
-  const ramoEscolhido = eu.dirigente
-    ? ramoPedido
-    : eu.escotista
-      ? eu.idramo
-      : null;
+  const ramoEscolhido = eu.escotista ? eu.idramo : null;
 
   const [pessoasBrutas, situacoes, avaliacao, ramos, jovensBruto] = await Promise.all([
     verResultados
@@ -387,36 +376,11 @@ export default async function Home({
                 </span>
               </div>
               <div className="p-4">
-                <form method="get" className="mb-4 flex flex-wrap items-end gap-2">
-                  {eu.dirigente ? (
-                    <>
-                      <label className="flex min-w-40 flex-1 flex-col gap-1 text-xs text-white">
-                        Ramo
-                        <select
-                          name="ramo"
-                          defaultValue={ramoPedido ?? ""}
-                          className="rounded border border-white/40 bg-white px-2 py-1 text-sm text-gray-900"
-                        >
-                          <option value="">Todos os ramos</option>
-                          {RAMOS_JOVENS.map((ramo) => (
-                            <option key={ramo.id} value={ramo.id}>
-                              {ramo.rotulo}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <button className="rounded bg-white px-3 py-1.5 text-sm font-medium text-azul hover:bg-amarelo-claro">
-                        Filtrar
-                      </button>
-                    </>
-                  ) : eu.escotista ? (
-                    <p className="text-xs text-white/90">
-                      Ramo do seu usuário: <strong>{rotuloRamoEscolhido}</strong>
-                    </p>
-                  ) : (
-                    <p className="text-xs text-white/90">Todos os ramos</p>
-                  )}
-                </form>
+                {eu.escotista && (
+                  <p className="mb-3 text-xs text-gray-600">
+                    Ramo do seu usuário: <strong>{rotuloRamoEscolhido}</strong>
+                  </p>
+                )}
                 <GraficoDistribuicao itens={jovensPorRamo} unidade="jovem" unidadePlural="jovens" />
               </div>
             </section>

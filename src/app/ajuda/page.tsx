@@ -118,9 +118,10 @@ export default async function Ajuda() {
             <li>
               Use o menu lateral para navegar. O grupo <strong>Cadastros</strong> começa fechado: clique no ▶ para abrir
               o submenu, onde ficam Jovens, Associados, Ramos, Funções, Situações, Fornecedores, Cadastro de campanha,
-              Avaliações, Questionários e Lenços. No grupo <strong>Geral</strong> ficam <strong>Campanhas</strong> (consulta)
-              e <strong>Entrega de blocos</strong>. A consulta somente leitura de fornecedores fica fora desse grupo, no item{" "}
-              <strong>Fornecedores</strong> (somente leitura). O item com fundo branco e texto azul indica a tela atual.
+              Avaliações, Questionários e Lenços. No grupo <strong>Geral</strong> fica <strong>Campanhas</strong> (consulta);
+              a <strong>Entrega de blocos</strong> é acessada por um botão dentro dessa tela, não é item do menu. A consulta
+              somente leitura de fornecedores fica fora desse grupo, no item <strong>Fornecedores</strong> (somente leitura).
+              O item com fundo branco e texto azul indica a tela atual.
             </li>
             <li>
               Se aparecer “Nenhum menu liberado” ou “Acesso não liberado”, seu cadastro ainda não tem liberações ou está
@@ -331,12 +332,12 @@ export default async function Ajuda() {
         <Secao id="campanhas" titulo="Campanhas e rifas" rota="/campanhas">
           <p>
             Três telas complementares: <strong>Cadastro de campanha</strong> (em Cadastros), <strong>Campanhas</strong>{" "}
-            (consulta, em Geral) e <strong>Entrega de blocos</strong> (em Geral).
+            (consulta, em Geral) e <strong>Entrega de blocos</strong> (aberta pelo botão na tela Campanhas).
           </p>
           <Itens>
             <li>
               <strong>Cadastro:</strong> o valor do bilhete é obrigatório e aparece com máscara <code>R$ ...</code>.
-              <strong> Valor total = valor do bilhete × folhas</strong>. Cada bloco tem sua própria quantidade de folhas e
+              <strong> Valor do bloco = valor do bilhete × folhas do bloco</strong>. Cada bloco tem sua própria quantidade de folhas e
               sua numeração inicial/final. A lista permite editar folhas e numeração antes de gerar; após gerar, use o
               detalhe da campanha para incluir, editar ou excluir blocos disponíveis.
             </li>
@@ -347,8 +348,9 @@ export default async function Ajuda() {
             </li>
             <li>
               <strong>Entrega:</strong> escolha a campanha no seletor. Para cada bloco use <strong>Retirar</strong> (sempre
-              do bloco inteiro) ou <strong>Acertar</strong>. Depois do acerto o botão fica <strong>Encerrado</strong>. A
-              situação <strong>Aguardando</strong> indica bloco retirado e ainda não acertado.
+              do bloco inteiro) ou <strong>Acertar</strong>: o formulário abre em uma tela própria e fecha ao concluir; a
+              lista de blocos só atualiza as informações das linhas. Depois do acerto o botão fica <strong>Encerrado</strong>.
+              A situação <strong>Aguardando</strong> indica bloco retirado e ainda não acertado.
             </li>
             <li>
               No campo de pessoa, digite ou escolha um nome da lista: o tipo vem entre parênteses, como{" "}

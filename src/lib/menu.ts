@@ -7,6 +7,9 @@ export type ItemMenu = {
   rotulo: string;
   href: string;
   grupo: (typeof MENU_GRUPOS)[number];
+  // A chave continua existindo para permissão e rota, mas não aparece no menu:
+  // a entrega é acessada de dentro da tela de campanhas.
+  ocultoNoMenu?: boolean;
 };
 
 export const ITENS_MENU: ItemMenu[] = [
@@ -20,6 +23,7 @@ export const ITENS_MENU: ItemMenu[] = [
     rotulo: "Entrega de blocos",
     href: "/entrega-blocos",
     grupo: "Geral",
+    ocultoNoMenu: true,
   },
   {
     chave: "fornecedoresconsulta",

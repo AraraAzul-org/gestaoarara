@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Shell } from "@/components/Shell";
+import { AcaoBlocoModal } from "@/components/AcaoBlocoModal";
 import { FormAcerto } from "@/components/FormAcerto";
 import { FormRetirada } from "@/components/FormRetirada";
 import { createClient } from "@/lib/supabase/server";
@@ -11,6 +12,7 @@ import {
   distribuicoesPorBloco,
   metricasCampanha,
   situacaoBloco,
+  valorDoBloco,
   type BlocoCampanha,
   type Campanha,
   type DistribuicaoCampanha,
@@ -19,9 +21,6 @@ import {
 import { registrarAcerto, registrarRetirada } from "./actions";
 
 export const instant = false;
-
-const sumario =
-  "inline-flex cursor-pointer list-none items-center rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul/40 [&::-webkit-details-marker]:hidden";
 
 export default async function EntregaBlocos({
   searchParams,
@@ -246,8 +245,11 @@ export default async function EntregaBlocos({
                               Encerrado
                             </button>
                           ) : disponivel ? (
-                            <details>
-                              <summary className={sumario}>Retirar</summary>
+                            <AcaoBlocoModal
+                              key={`retirar-${bloco.idbloco}`}
+                              rotulo="Retirar"
+                              titulo={`Retirar bloco ${bloco.numero}`}
+                            >
                               <FormRetirada
                                 action={registrarRetirada}
                                 idcampanha={idcampanha}
@@ -255,16 +257,18 @@ export default async function EntregaBlocos({
                                 numero={bloco.numero}
                                 numeracao={`${bloco.numeracaoinicial} – ${bloco.numeracaofinal}`}
                                 folhas={Number(bloco.quantbilhetes)}
-                                valorBloco={Number(bloco.quantbilhetes) * unitario}
+                                valorBloco={valorDoBloco(bloco.quantbilhetes, unitario)}
                                 pessoas={pessoas}
                                 hoje={hoje}
                               />
-                            </details>
+                            </AcaoBlocoModal>
                           ) : retirado ? (
-                            <details>
-                              <summary className="inline-flex cursor-pointer list-none items-center rounded bg-green-600 px-2 py-1 text-xs font-medium text-white [&::-webkit-details-marker]:hidden">
-                                Acertar
-                              </summary>
+                            <AcaoBlocoModal
+                              key={`acertar-${bloco.idbloco}`}
+                              rotulo="Acertar"
+                              titulo={`Acertar bloco ${bloco.numero}`}
+                              className="rounded bg-green-600 px-2 py-1 text-xs font-medium text-white hover:bg-green-700"
+                            >
                               <FormAcerto
                                 action={registrarAcerto}
                                 idcampanha={idcampanha}
@@ -273,7 +277,7 @@ export default async function EntregaBlocos({
                                 valorBilhete={unitario}
                                 dataacerto={hoje}
                               />
-                            </details>
+                            </AcaoBlocoModal>
                           ) : null}
                         </td>
                       </tr>

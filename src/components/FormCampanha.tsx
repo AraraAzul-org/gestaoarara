@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   STATUS_CAMPANHA,
   linhasDaCampanha,
+  valorDoBloco,
   type BlocoCampanha,
   type Campanha,
 } from "@/lib/campanhas";
@@ -236,11 +237,11 @@ export function FormCampanha({
         />
       </label>
       <label className={rotulo}>
-        Valor total da campanha (calculado)
+        Quantidade de bilhetes (total)
         <input
           readOnly
           tabIndex={-1}
-          value={textoMoeda(valorTotal)}
+          value={folhasTotais.toLocaleString("pt-BR")}
           className={`${campo} max-w-[175px] bg-gray-50 text-right tabular-nums`}
         />
       </label>
@@ -399,7 +400,7 @@ export function FormCampanha({
                     />
                   </td>
                   <td className="px-2 py-1.5 text-right tabular-nums">
-                    {formatarReais((Number(linha.folhas) || 0) * numeroMoeda(valorBilhete))}
+                    {formatarReais(valorDoBloco(linha.folhas, valorBilhete))}
                   </td>
                   <td className="px-2 py-1.5">
                     {!jaGerou && (
@@ -453,7 +454,8 @@ export function FormCampanha({
             {titulo === "Editar campanha" ? "Salvar alterações" : "Salvar campanha"}
           </button>
           <span className="text-xs text-gray-600">
-            Valor total = valor do bilhete × folhas. Valor do acerto = quantidade vendida × valor do bilhete.
+            Valor do bloco = valor do bilhete × folhas do bloco. Valor do acerto = quantidade vendida × valor do
+            bilhete.
           </span>
         </div>
       </div>

@@ -76,6 +76,17 @@ export default async function CadastroCampanha({
           Cadastre a campanha e sua lista de blocos de rifas, com quantidades e numeração próprias.
         </p>
 
+        {(eu.acessos.has("campanha") || eu.acessos.has("entregablocos")) && (
+          <div className="mt-4">
+            <Link
+              href="/entrega-blocos"
+              className="inline-block rounded border border-azul bg-white px-3 py-1.5 text-sm font-medium text-azul hover:bg-azul/5"
+            >
+              Entrega de blocos
+            </Link>
+          </div>
+        )}
+
         {params.erro && (
           <p role="alert" className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             {params.erro}
@@ -109,7 +120,7 @@ export default async function CadastroCampanha({
 
         <section className="mt-6">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-azul">
-            Campanhas cadastradas ({completas.length})
+            Campanhas cadastradas
           </h2>
           {error && (
             <p role="alert" className="mt-3 rounded bg-red-50 p-2 text-sm text-red-700">
@@ -127,7 +138,7 @@ export default async function CadastroCampanha({
               return (
                 <li key={c.idcampanha} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
                   <div className="flex flex-wrap items-center gap-2">
-                    <strong className="flex-1 text-gray-900">{c.titulo}</strong>
+                    <strong className="flex-1 text-lg font-semibold text-azul">{c.titulo}</strong>
                     <span className={`rounded px-2 py-0.5 text-xs font-medium ${corStatus[c.status]}`}>
                       {c.status}
                     </span>

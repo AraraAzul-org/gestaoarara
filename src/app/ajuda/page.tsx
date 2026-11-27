@@ -15,6 +15,7 @@ const INDICE = [
   ["promessas", "Promessas"],
   ["lencos", "Lenços"],
   ["cadastros", "Cadastros"],
+  ["campanhas", "Campanhas e rifas"],
   ["minhas-avaliacoes", "Minhas avaliações"],
   ["meu-ppf", "Meu PPF"],
   ["meus-assessorados", "Meus assessorados"],
@@ -116,8 +117,9 @@ export default async function Ajuda() {
             </li>
             <li>
               Use o menu lateral para navegar. O grupo <strong>Cadastros</strong> começa fechado: clique no ▶ para abrir
-              o submenu, onde ficam Jovens, Associados, Ramos, Funções, Situações, Fornecedores, Avaliações,
-              Questionários e Lenços. A consulta somente leitura de fornecedores fica fora desse grupo, no item{" "}
+              o submenu, onde ficam Jovens, Associados, Ramos, Funções, Situações, Fornecedores, Cadastro de campanha,
+              Avaliações, Questionários e Lenços. No grupo <strong>Geral</strong> ficam <strong>Campanhas</strong> (consulta)
+              e <strong>Entrega de blocos</strong>. A consulta somente leitura de fornecedores fica fora desse grupo, no item{" "}
               <strong>Fornecedores</strong> (somente leitura). O item com fundo branco e texto azul indica a tela atual.
             </li>
             <li>
@@ -252,7 +254,8 @@ export default async function Ajuda() {
         <Secao id="cadastros" titulo="Cadastros">
           <p>
             O submenu <strong>Cadastros</strong> reúne Jovens, Associados, Ramos, Funções, Situações, Fornecedores,
-            Avaliações, Questionários e Lenços. Cada item pode ser liberado separadamente na tela de acessos.
+            Cadastro de campanha, Avaliações, Questionários e Lenços. Cada item pode ser liberado separadamente na tela
+            de acessos.
           </p>
           <ul className="ml-5 list-disc space-y-2">
             <li>
@@ -296,6 +299,13 @@ export default async function Ajuda() {
                você escolher o contato e enviar. Nada é enviado automaticamente.
             </li>
             <li>
+              <strong>Cadastro de campanha:</strong> cria a campanha de rifas com título, período, data do sorteio,
+              bilhete em reais, prêmios e descritivo. Na lista editável informe as <strong>folhas</strong> por bloco e
+              clique em <strong>Gerar blocos</strong> (em branco gera 1 bloco). A folha inicial e a final ficam gravadas;
+              o total de folhas e o valor total aparecem no rodapé. Depois de gerar, blocos novos entram pelo detalhe da
+              campanha e não recalculam os anteriores. Para <strong>finalizar</strong>, descreva os ganhadores.
+            </li>
+            <li>
               <strong>Avaliações:</strong> uma avaliação nasce como <strong>Rascunho</strong> e passa a{" "}
               <strong>Aberta</strong> quando você gera as avaliações individuais. Crie com Descrição, Questionário, Prazo
               e a opção de gerar PPF ao concluir a etapa do APF. Use <strong>Gerar avaliações</strong> ou{" "}
@@ -316,6 +326,44 @@ export default async function Ajuda() {
               consulta fica no item separado “Lenços”, no grupo Geral do menu.
             </li>
           </ul>
+        </Secao>
+
+        <Secao id="campanhas" titulo="Campanhas e rifas" rota="/campanhas">
+          <p>
+            Três telas complementares: <strong>Cadastro de campanha</strong> (em Cadastros), <strong>Campanhas</strong>{" "}
+            (consulta, em Geral) e <strong>Entrega de blocos</strong> (em Geral).
+          </p>
+          <Itens>
+            <li>
+              <strong>Cadastro:</strong> o valor do bilhete é obrigatório e aparece com máscara <code>R$ ...</code>.
+              <strong> Valor total = valor do bilhete × folhas</strong>. Cada bloco tem sua própria quantidade de folhas e
+              sua numeração inicial/final. A lista permite editar folhas e numeração antes de gerar; após gerar, use o
+              detalhe da campanha para incluir, editar ou excluir blocos disponíveis.
+            </li>
+            <li>
+              <strong>Consulta:</strong> campanhas em aberto vêm primeiro e finalizadas depois. Os cartões mostram
+              bilhetes, entregues, aguardando acerto, acertados, valor acertado e devolvidos. Abra <strong>Ver blocos</strong>{" "}
+              para o detalhe com a numeração gravada de cada bloco.
+            </li>
+            <li>
+              <strong>Entrega:</strong> escolha a campanha no seletor. Para cada bloco use <strong>Retirar</strong> (sempre
+              do bloco inteiro) ou <strong>Acertar</strong>. Depois do acerto o botão fica <strong>Encerrado</strong>. A
+              situação <strong>Aguardando</strong> indica bloco retirado e ainda não acertado.
+            </li>
+            <li>
+              No campo de pessoa, digite ou escolha um nome da lista: o tipo vem entre parênteses, como{" "}
+              <code>Nome (Associado)</code> ou <code>Nome (Jovem)</code>. O nome do terceiro vai em uma linha separada.
+            </li>
+            <li>
+              O acerto pode ser parcial: informe <strong>Quantidade acertada / vendida</strong> e a data.{" "}
+              <strong>Valor do acerto = quantidade vendida × valor do bilhete</strong>; o restante volta como{" "}
+              <strong>Devolvido</strong>. Os totais aparecem no rodapé da tabela.
+            </li>
+          </Itens>
+          <Nota>
+            A liberação <code>campanha</code> permite cadastrar e alterar; <code>campanhas</code> é somente leitura;{" "}
+            <code>entregablocos</code> permite retirar e acertar sem mexer no cadastro.
+          </Nota>
         </Secao>
 
         <Secao id="minhas-avaliacoes" titulo="Minhas avaliações" rota="/minhas-avaliacoes">

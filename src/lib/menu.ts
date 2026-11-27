@@ -14,6 +14,13 @@ export const ITENS_MENU: ItemMenu[] = [
   { chave: "jovens", rotulo: "Jovens", href: "/jovens", grupo: "Cadastros" },
   { chave: "promessas", rotulo: "Promessas", href: "/promessas", grupo: "Geral" },
   { chave: "lencos", rotulo: "Lenços", href: "/lencos", grupo: "Geral" },
+  { chave: "campanhas", rotulo: "Campanhas", href: "/campanhas", grupo: "Geral" },
+  {
+    chave: "entregablocos",
+    rotulo: "Entrega de blocos",
+    href: "/entrega-blocos",
+    grupo: "Geral",
+  },
   {
     chave: "fornecedoresconsulta",
     rotulo: "Fornecedores",
@@ -25,6 +32,12 @@ export const ITENS_MENU: ItemMenu[] = [
   { chave: "funcoes", rotulo: "Funções", href: "/funcoes", grupo: "Cadastros" },
   { chave: "situacoes", rotulo: "Situações", href: "/situacoes", grupo: "Cadastros" },
   { chave: "fornecedores", rotulo: "Fornecedores", href: "/fornecedores", grupo: "Cadastros" },
+  {
+    chave: "campanha",
+    rotulo: "Cadastro de campanha",
+    href: "/campanha",
+    grupo: "Cadastros",
+  },
   { chave: "avaliacoes", rotulo: "Avaliações", href: "/avaliacoes", grupo: "Cadastros" },
   { chave: "perguntas", rotulo: "Questionários", href: "/perguntas", grupo: "Cadastros" },
   { chave: "lencoscadastro", rotulo: "Lenços", href: "/lencos/cadastro", grupo: "Cadastros" },

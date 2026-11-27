@@ -148,7 +148,11 @@ export default async function DocumentacaoTecnica() {
               enquanto a leitura aceita também <code>fornecedoresconsulta</code> numa política <code>SELECT</code>
               separada. Assim a consulta em <code>/consulta-fornecedores</code> pode ser liberada sem dar acesso ao
               cadastro. A busca usa <code>websearch_to_tsquery</code> com configuração <code>portuguese</code> e índice
-              GIN na coluna gerada <code>busca</code>.
+              GIN na coluna gerada <code>busca</code>. Em campanhas, <code>campanha</code> comanda a escrita nas três
+              tabelas (<code>campanha</code>, <code>campanha_bloco</code>, <code>campanha_distribuicao</code>);
+              <code>campanhas</code> e <code>entregablocos</code> leem por políticas <code>SELECT</code> separadas, e a
+              entrega grava por RPCs <code>security definer</code> que checam <code>private.pode_acesso</code>. Assim quem
+              só entrega não altera o cadastro.
             </li>
             <li>
               <strong>Dirigente:</strong> <code>cargo.avalia = true</code> <em>e</em> <code>usuario.linha =
@@ -170,8 +174,11 @@ export default async function DocumentacaoTecnica() {
         <Secao id="dados" titulo="Banco de dados">
           <p>
             O schema, as políticas de RLS, os triggers e as funções vivem no projeto Supabase, não neste repositório.
-            Há 22 migrações aplicadas em <code>supabase_migrations.schema_migrations</code>, de{" "}
-            <code>20261106104809</code> (criar_tabelas_autoavaliacao) a <code>20261120025723</code> (cria_modulo_lencos).
+            Há 35 migrações aplicadas em <code>supabase_migrations.schema_migrations</code>, de{" "}
+            <code>20261106104809</code> (criar_tabelas_autoavaliacao) a <code>20261127191309</code>{" "}
+            (20261127_campanhas_sugestoes). Os arquivos versionados correspondentes ficam em{" "}
+            <code>supabase/migrations/20261127_campanhas_rifas.sql</code> e{" "}
+            <code>supabase/migrations/20261127_campanhas_sugestoes.sql</code>.
           </p>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
@@ -185,10 +192,15 @@ export default async function DocumentacaoTecnica() {
               <tbody className="divide-y divide-gray-100">
                 {[
                   ["usuario", "43", "Adultos, vínculo de login, ramo e linha"],
-                  ["usuario_menu", "731", "Liberações de menu por usuário"],
+                  ["usuario_menu", "769", "Liberações de menu por usuário"],
                   ["jovem", "77", "Cadastro de jovens e datas de promessa"],
                   ["ramo / situacao / cargo", "7 / 7 / 10", "Tabelas de apoio"],
-                  ["fornecedor", "0", "Fornecedores e busca textual por nome/descrição"],
+                  ["fornecedor", "3", "Fornecedores e busca textual por nome/descrição"],
+                  [
+                    "campanha / campanha_bloco / campanha_distribuicao",
+                    "0 / 0 / 0",
+                    "Campanhas, blocos de rifas e retirada/acerto",
+                  ],
                   ["questionario / etapa", "2 / 8", "Questionários e etapas (Pontua / Não Pontua)"],
                   ["pergunta / pontuacao", "32 / 124", "Perguntas e opções com nota"],
                   ["resposta / avaliacao / avaliacaousuario", "124 / 1 / 5", "Respostas e ciclos de avaliação"],
@@ -209,12 +221,15 @@ export default async function DocumentacaoTecnica() {
             </table>
           </div>
           <p className="text-xs text-gray-500">
-            Contagens observadas em 23/11/2026; o backup diário grava contagens atualizadas em <code>manifest.json</code>.
+            Contagens observadas em 27/11/2026; o backup diário grava contagens atualizadas em <code>manifest.json</code>.
           </p>
           <p>
             RPCs usadas pelo app: <code>registrar_acesso</code>, <code>cancelar_avaliacao</code>,{" "}
-            <code>gerar_avaliacao</code>, <code>gerar_avaliacao_selecionados</code>, <code>concluir_nivel</code> e{" "}
-            <code>gerar_ppf</code>.
+            <code>gerar_avaliacao</code>, <code>gerar_avaliacao_selecionados</code>, <code>concluir_nivel</code>,{" "}
+            <code>gerar_ppf</code>, <code>criar_campanha</code>, <code>atualizar_campanha</code>,{" "}
+            <code>criar_bloco</code>, <code>salvar_bloco</code>, <code>excluir_bloco</code>,{" "}
+            <code>registrar_retirada</code>, <code>registrar_acerto</code> e{" "}
+            <code>pessoas_para_entrega</code>.
           </p>
         </Secao>
 

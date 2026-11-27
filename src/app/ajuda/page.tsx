@@ -291,7 +291,9 @@ export default async function Ajuda() {
               <code>OR</code> e <code>-</code>. Use <strong>Novo fornecedor</strong> para incluir e, em cada registro,{" "}
               <strong>Editar</strong> ou <strong>Excluir</strong>. O cadastro só aparece para quem tem a liberação específica
               “Fornecedores”. Em <strong>Fornecedores</strong>, fora de Cadastros, a mesma busca funciona sem botões de
-               alteração; essa liberação pode ser dada só a quem deve consultar.
+               alteração; essa liberação pode ser dada só a quem deve consultar. Em cada resultado da consulta há o botão{" "}
+              <strong>WhatsApp</strong>: ele abre o aplicativo com os dados do fornecedor já escritos na mensagem para
+               você escolher o contato e enviar. Nada é enviado automaticamente.
             </li>
             <li>
               <strong>Avaliações:</strong> uma avaliação nasce como <strong>Rascunho</strong> e passa a{" "}

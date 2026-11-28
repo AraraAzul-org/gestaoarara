@@ -18,7 +18,7 @@ import {
   type DistribuicaoCampanha,
   type PessoaSugestao,
 } from "@/lib/campanhas";
-import { criarBloco, excluirBloco, salvarBloco } from "./actions";
+import { criarBloco } from "./actions";
 import { registrarAcerto, registrarRetirada } from "../../entrega-blocos/actions";
 
 export const instant = false;
@@ -284,43 +284,6 @@ export default async function DetalheCampanha({
                               dataacerto={hoje}
                             />
                           </AcaoBlocoModal>
-                        )}
-                        {podeEditar && campanha.status !== "finalizada" && disponivel && (
-                          <>
-                            <details>
-                              <summary className={sumario}>Editar</summary>
-                              <form action={salvarBloco} className="mt-2 grid gap-2 rounded border border-gray-200 bg-gray-50 p-2">
-                                <input type="hidden" name="idcampanha" value={idcampanha} />
-                                <input type="hidden" name="idbloco" value={bloco.idbloco} />
-                                <label className="flex flex-col gap-1 text-[11px] font-semibold uppercase text-gray-600">
-                                  Folhas
-                                  <input type="number" name="folhas" min={1} defaultValue={bloco.quantbilhetes} className={`${campo} w-24`} />
-                                </label>
-                                <label className="flex flex-col gap-1 text-[11px] font-semibold uppercase text-gray-600">
-                                  Folha inicial
-                                  <input type="number" name="inicio" min={1} defaultValue={bloco.numeracaoinicial} className={`${campo} w-24`} />
-                                </label>
-                                <label className="flex flex-col gap-1 text-[11px] font-semibold uppercase text-gray-600">
-                                  Folha final
-                                  <input type="number" name="fim" min={1} defaultValue={bloco.numeracaofinal} className={`${campo} w-24`} />
-                                </label>
-                                <button className="rounded bg-azul px-2 py-1 text-xs font-medium text-white">
-                                  Salvar bloco
-                                </button>
-                              </form>
-                            </details>
-                            <details>
-                              <summary className={sumario}>Excluir</summary>
-                              <form action={excluirBloco} className="mt-2 rounded border border-red-200 bg-red-50 p-2 text-xs">
-                                <input type="hidden" name="idcampanha" value={idcampanha} />
-                                <input type="hidden" name="idbloco" value={bloco.idbloco} />
-                                <p>Excluir o bloco {bloco.numero}? Não é possível desfazer.</p>
-                                <button className="mt-1 rounded bg-red-700 px-2 py-1 font-semibold text-white">
-                                  Confirmar exclusão
-                                </button>
-                              </form>
-                            </details>
-                          </>
                         )}
                       </div>
                     </td>

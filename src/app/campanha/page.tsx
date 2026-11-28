@@ -159,7 +159,7 @@ export default async function CadastroCampanha({
                       href={`/campanhas/${c.idcampanha}`}
                       className="rounded bg-azul px-3 py-1.5 text-sm font-medium text-white hover:bg-azul-escuro"
                     >
-                      Ver blocos
+                      Blocos
                     </Link>
                     {c.blocos.length > 0 && (
                       <Link

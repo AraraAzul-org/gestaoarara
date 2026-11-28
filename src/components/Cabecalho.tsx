@@ -10,7 +10,8 @@ export async function Cabecalho() {
   return (
     <header className="border-b-4 border-amarelo bg-azul text-white">
       <div className="flex flex-wrap items-center gap-3 p-3.5">
-        <Image src="/logo.png" alt="Grupo Escoteiro Arara Azul" width={53} height={62} priority />
+        {/* 61 acompanha as variantes otimizadas do logo (64×74 / 128×148); 62 gerava aviso de proporção. */}
+        <Image src="/logo.png" alt="Grupo Escoteiro Arara Azul" width={53} height={61} priority />
         <span className="flex-1 font-semibold">Gestão do Grupo</span>
         <Link href="/trocar-senha" className="text-sm underline">Minha senha</Link>
         <Link href="/ajuda" className="text-sm underline">Ajuda</Link>

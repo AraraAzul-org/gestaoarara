@@ -117,7 +117,7 @@ export default async function Ajuda() {
             </li>
             <li>
               Use o menu lateral para navegar. O grupo <strong>Cadastros</strong> começa fechado: clique no ▶ para abrir
-              o submenu, onde ficam Jovens, Associados, Ramos, Funções, Situações, Fornecedores, Cadastro de campanha,
+              o submenu, onde ficam Jovens, Associados, Ramos, Funções, Situações, Fornecedores, Campanha,
               Avaliações, Questionários e Lenços. No grupo <strong>Geral</strong> fica <strong>Campanhas</strong> (consulta);
               a <strong>Entrega de blocos</strong> é acessada por um botão dentro dessa tela, não é item do menu. A consulta
               somente leitura de fornecedores fica fora desse grupo, no item <strong>Fornecedores</strong> (somente leitura).
@@ -255,7 +255,7 @@ export default async function Ajuda() {
         <Secao id="cadastros" titulo="Cadastros">
           <p>
             O submenu <strong>Cadastros</strong> reúne Jovens, Associados, Ramos, Funções, Situações, Fornecedores,
-            Cadastro de campanha, Avaliações, Questionários e Lenços. Cada item pode ser liberado separadamente na tela
+            Campanha, Avaliações, Questionários e Lenços. Cada item pode ser liberado separadamente na tela
             de acessos.
           </p>
           <ul className="ml-5 list-disc space-y-2">
@@ -300,7 +300,7 @@ export default async function Ajuda() {
                você escolher o contato e enviar. Nada é enviado automaticamente.
             </li>
             <li>
-              <strong>Cadastro de campanha:</strong> cria a campanha de rifas com título, período, data do sorteio,
+              <strong>Campanha:</strong> cria a campanha de rifas com título, período, data do sorteio,
               bilhete em reais, prêmios e descritivo. Na lista editável informe as <strong>folhas</strong> por bloco e
               clique em <strong>Gerar blocos</strong> (em branco gera 1 bloco). A folha inicial e a final ficam gravadas;
               o total de folhas e o valor total aparecem no rodapé. Depois de gerar, blocos novos entram pelo detalhe da
@@ -331,7 +331,7 @@ export default async function Ajuda() {
 
         <Secao id="campanhas" titulo="Campanhas e rifas" rota="/campanhas">
           <p>
-            Três telas complementares: <strong>Cadastro de campanha</strong> (em Cadastros), <strong>Campanhas</strong>{" "}
+            Três telas complementares: <strong>Campanha</strong> (cadastro, em Cadastros), <strong>Campanhas</strong>{" "}
             (consulta, em Geral) e <strong>Entrega de blocos</strong> (aberta pelo botão na tela Campanhas).
           </p>
           <Itens>
@@ -343,7 +343,7 @@ export default async function Ajuda() {
             </li>
             <li>
               <strong>Consulta:</strong> campanhas em aberto vêm primeiro e finalizadas depois. Os cartões mostram
-              bilhetes, entregues, aguardando acerto, acertados, valor acertado e devolvidos. Abra <strong>Ver blocos</strong>{" "}
+              bilhetes, entregues, aguardando acerto, acertados, valor acertado e devolvidos. Abra <strong>Blocos</strong>{" "}
               para o detalhe com a numeração gravada de cada bloco.
             </li>
             <li>

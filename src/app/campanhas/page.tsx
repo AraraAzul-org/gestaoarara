@@ -157,7 +157,7 @@ function CartaoCampanha({
           href={`/campanhas/${campanha.idcampanha}`}
           className="rounded bg-azul px-3 py-1.5 text-sm font-medium text-white hover:bg-azul-escuro"
         >
-          Ver blocos
+          Blocos
         </Link>
         {campanha.blocos.length > 0 && (
           <Link

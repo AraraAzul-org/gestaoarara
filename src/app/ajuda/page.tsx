@@ -119,8 +119,9 @@ export default async function Ajuda() {
               Use o menu lateral para navegar. O grupo <strong>Cadastros</strong> começa fechado: clique no ▶ para abrir
               o submenu, onde ficam Jovens, Associados, Ramos, Funções, Situações, Fornecedores, Campanha,
               Avaliações, Questionários e Lenços. No grupo <strong>Geral</strong> fica <strong>Campanhas</strong> (consulta);
-              a <strong>Entrega de blocos</strong> é acessada por um botão dentro dessa tela, não é item do menu. A consulta
-              somente leitura de fornecedores fica fora desse grupo, no item <strong>Fornecedores</strong> (somente leitura).
+              a <strong>Entrega de blocos</strong> é acessada pelo botão no detalhe da campanha (Blocos), não é item do
+              menu. A consulta somente leitura de fornecedores fica fora desse grupo, no item <strong>Fornecedores</strong>{" "}
+              (somente leitura).
               O item com fundo branco e texto azul indica a tela atual.
             </li>
             <li>
@@ -332,7 +333,7 @@ export default async function Ajuda() {
         <Secao id="campanhas" titulo="Campanhas e rifas" rota="/campanhas">
           <p>
             Três telas complementares: <strong>Campanha</strong> (cadastro, em Cadastros), <strong>Campanhas</strong>{" "}
-            (consulta, em Geral) e <strong>Entrega de blocos</strong> (aberta pelo botão na tela Campanhas).
+            (consulta, em Geral) e <strong>Entrega de blocos</strong> (aberta pelo botão no detalhe da campanha).
           </p>
           <Itens>
             <li>
@@ -363,8 +364,9 @@ export default async function Ajuda() {
             </li>
           </Itens>
           <Nota>
-            A liberação <code>campanha</code> permite cadastrar e alterar; <code>campanhas</code> é somente leitura;{" "}
-            <code>entregablocos</code> permite retirar e acertar sem mexer no cadastro.
+            A liberação <code>campanha</code> permite cadastrar e alterar em Cadastros; <code>campanhas</code> dá acesso
+            somente leitura à tela Campanhas; <code>entregablocos</code> permite retirar e acertar pelo detalhe da campanha,
+            sem mexer no cadastro.
           </Nota>
         </Secao>
 

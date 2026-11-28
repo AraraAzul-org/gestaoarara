@@ -25,7 +25,7 @@ export default async function Campanhas() {
   const supabase = await createClient();
   const eu = await carregarEu(supabase);
   if (!eu) redirect("/login");
-  if (!eu.acessos.has("campanha") && !eu.acessos.has("campanhas")) redirect("/");
+  if (!eu.acessos.has("campanhas")) redirect("/");
 
   const { data: campanhasData, error } = await supabase
     .from("campanha")
@@ -62,17 +62,6 @@ export default async function Campanhas() {
           e os acertos.
         </p>
 
-        {(eu.acessos.has("campanha") || eu.acessos.has("entregablocos")) && (
-          <div className="mt-4">
-            <Link
-              href="/entrega-blocos"
-              className="inline-block rounded border border-azul bg-white px-3 py-1.5 text-sm font-medium text-azul hover:bg-azul/5"
-            >
-              Entrega de blocos
-            </Link>
-          </div>
-        )}
-
         {error && (
           <p role="alert" className="mt-3 rounded bg-red-50 p-2 text-sm text-red-700">
             Não foi possível carregar as campanhas.
@@ -89,7 +78,7 @@ export default async function Campanhas() {
         )}
         <ul className="mt-2 space-y-3">
           {abertas.map((c) => (
-            <CartaoCampanha key={c.idcampanha} campanha={c} podeEditar={eu.acessos.has("campanha")} />
+            <CartaoCampanha key={c.idcampanha} campanha={c} />
           ))}
         </ul>
 
@@ -103,26 +92,15 @@ export default async function Campanhas() {
         )}
         <ul className="mt-2 space-y-3">
           {finalizadas.map((c) => (
-            <CartaoCampanha key={c.idcampanha} campanha={c} podeEditar={eu.acessos.has("campanha")} />
+            <CartaoCampanha key={c.idcampanha} campanha={c} />
           ))}
         </ul>
-
-        <p className="mt-5 rounded border-l-4 border-l-amarelo bg-amarelo-claro p-3 text-xs text-gray-700">
-          Valores em reais. <strong>Valor acertado = quantidade vendida × valor do bilhete</strong>;
-          devolvido = rifas retiradas − rifas vendidas. Cada bloco guarda sua própria folha inicial e final.
-        </p>
       </main>
     </Shell>
   );
 }
 
-function CartaoCampanha({
-  campanha,
-  podeEditar,
-}: {
-  campanha: ReturnType<typeof gruposDeCampanhas>[number];
-  podeEditar: boolean;
-}) {
+function CartaoCampanha({ campanha }: { campanha: ReturnType<typeof gruposDeCampanhas>[number] }) {
   const metricas = metricasCampanha(campanha, campanha.blocos, campanha.distribuicoes);
   const cells = [
     ["Bilhetes", String(metricas.total)],
@@ -165,14 +143,6 @@ function CartaoCampanha({
             className="rounded border border-azul bg-white px-3 py-1.5 text-sm font-medium text-azul hover:bg-azul/5"
           >
             Entrega
-          </Link>
-        )}
-        {podeEditar && (
-          <Link
-            href={`/campanha/form?editar=${campanha.idcampanha}`}
-            className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
-          >
-            Editar
           </Link>
         )}
       </div>

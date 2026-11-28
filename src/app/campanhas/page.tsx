@@ -137,14 +137,6 @@ function CartaoCampanha({ campanha }: { campanha: ReturnType<typeof gruposDeCamp
         >
           Blocos
         </Link>
-        {campanha.blocos.length > 0 && (
-          <Link
-            href={`/entrega-blocos?campanha=${campanha.idcampanha}`}
-            className="rounded border border-azul bg-white px-3 py-1.5 text-sm font-medium text-azul hover:bg-azul/5"
-          >
-            Entrega
-          </Link>
-        )}
       </div>
     </li>
   );

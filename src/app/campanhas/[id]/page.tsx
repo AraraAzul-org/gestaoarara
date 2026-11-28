@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Shell } from "@/components/Shell";
+import { Voltar } from "@/components/Voltar";
 import { AcaoBlocoModal } from "@/components/AcaoBlocoModal";
 import { FormAcerto } from "@/components/FormAcerto";
 import { FormRetirada } from "@/components/FormRetirada";
@@ -18,15 +18,9 @@ import {
   type DistribuicaoCampanha,
   type PessoaSugestao,
 } from "@/lib/campanhas";
-import { criarBloco } from "./actions";
 import { registrarAcerto, registrarRetirada } from "../../entrega-blocos/actions";
 
 export const instant = false;
-
-const sumario =
-  "inline-flex cursor-pointer list-none items-center rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul/40 [&::-webkit-details-marker]:hidden";
-const campo =
-  "w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:border-azul focus:outline-none focus:ring-2 focus:ring-azul/20";
 
 export default async function DetalheCampanha({
   params,
@@ -91,7 +85,8 @@ export default async function DetalheCampanha({
   return (
     <Shell>
       <main className="max-w-6xl p-4">
-        <h1 className="text-xl font-semibold text-azul">{campanha.titulo}</h1>
+        <Voltar href="/campanhas" />
+        <h1 className="mt-2 text-xl font-semibold text-azul">{campanha.titulo}</h1>
         <p className="mt-1 text-sm text-gray-600">
           {campanha.status} · Sorteio em {dataBR(campanha.datasorteio)} · {campanha.descritivo ?? "—"}
         </p>
@@ -133,35 +128,6 @@ export default async function DetalheCampanha({
             Blocos na ordem em que foram cadastrados. A folha inicial/final é a gravada em cada bloco: incluir
             um bloco novo não recalcula os anteriores, mesmo que a numeração fique fora de ordem.
           </p>
-        </div>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Link href="/campanhas" className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50">
-            ← Campanhas
-          </Link>
-          {podeEntregar && blocos.length > 0 && (
-            <Link
-              href={`/entrega-blocos?campanha=${idcampanha}`}
-              className="rounded border border-azul bg-white px-3 py-1.5 text-sm font-medium text-azul hover:bg-azul/5"
-            >
-              Entrega de blocos
-            </Link>
-          )}
-          {podeEditar && campanha.status !== "finalizada" && (
-            <details className="rounded border border-gray-200 bg-white px-3 py-1.5">
-              <summary className={sumario}>Novo bloco</summary>
-              <form action={criarBloco} className="mt-2 flex flex-wrap items-end gap-2">
-                <input type="hidden" name="idcampanha" value={idcampanha} />
-                <label className="flex flex-col gap-1 text-[11px] font-semibold uppercase text-gray-600">
-                  Folhas (rifas) do novo bloco
-                  <input type="number" name="folhas" min={1} defaultValue={50} className={`${campo} w-32`} />
-                </label>
-                <button className="rounded bg-azul px-3 py-1.5 text-sm font-medium text-white hover:bg-azul-escuro">
-                  Adicionar bloco
-                </button>
-              </form>
-            </details>
-          )}
         </div>
 
         <div className="mt-4 overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">

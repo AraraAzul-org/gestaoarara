@@ -15,6 +15,8 @@ type LinhaFormulario = { folhas: string; inicio: string; fim: string };
 
 const campo =
   "w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:border-azul focus:outline-none focus:ring-2 focus:ring-azul/20";
+const campoTabelaNumero =
+  "w-16 rounded border border-gray-300 px-1.5 py-1.5 text-right text-sm tabular-nums focus:border-azul focus:outline-none focus:ring-2 focus:ring-azul/20";
 const rotulo =
   "flex flex-col gap-1 text-[11px] font-semibold uppercase tracking-wide text-gray-600";
 const btn = "rounded bg-azul px-3 py-1.5 text-sm font-medium text-white hover:bg-azul-escuro";
@@ -358,10 +360,10 @@ export function FormCampanha({
           <table className="w-full text-left text-sm">
             <thead className="bg-azul text-[11px] uppercase tracking-wide text-white">
               <tr>
-                <th className="px-2 py-2">Bloco</th>
-                <th className="px-2 py-2">Folha inicial</th>
-                <th className="px-2 py-2">Folhas</th>
-                <th className="px-2 py-2">Folha final</th>
+                <th className="px-2 py-2 text-right">Bloco</th>
+                <th className="px-2 py-2 text-right">Folha inicial</th>
+                <th className="px-2 py-2 text-right">Folhas</th>
+                <th className="px-2 py-2 text-right">Folha final</th>
                 <th className="px-2 py-2 text-right">Valor do bloco</th>
                 <th className="px-2 py-2" aria-label="Ações" />
               </tr>
@@ -378,34 +380,34 @@ export function FormCampanha({
               {linhas.map((linha, indice) => (
                 <tr key={indice}>
                   <td className="px-2 py-1.5 text-right tabular-nums">{indice + 1}</td>
-                  <td className="px-2 py-1.5">
+                  <td className="px-2 py-1.5 text-right">
                     <input
                       type="number"
                       min={1}
                       disabled={jaGerou}
                       value={linha.inicio}
                       onChange={(e) => alterarLinha(indice, "inicio", e.target.value)}
-                      className={`${campo} w-24 tabular-nums`}
+                      className={campoTabelaNumero}
                     />
                   </td>
-                  <td className="px-2 py-1.5">
+                  <td className="px-2 py-1.5 text-right">
                     <input
                       type="number"
                       min={1}
                       disabled={jaGerou}
                       value={linha.folhas}
                       onChange={(e) => alterarLinha(indice, "folhas", e.target.value)}
-                      className={`${campo} w-24 tabular-nums`}
+                      className={campoTabelaNumero}
                     />
                   </td>
-                  <td className="px-2 py-1.5">
+                  <td className="px-2 py-1.5 text-right">
                     <input
                       type="number"
                       min={1}
                       disabled={jaGerou}
                       value={linha.fim}
                       onChange={(e) => alterarLinha(indice, "fim", e.target.value)}
-                      className={`${campo} w-24 tabular-nums`}
+                      className={campoTabelaNumero}
                     />
                   </td>
                   <td className="px-2 py-1.5 text-right tabular-nums">

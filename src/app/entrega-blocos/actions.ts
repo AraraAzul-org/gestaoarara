@@ -19,6 +19,7 @@ function voltar(idcampanha: number, tipo: "ok" | "erro", mensagem: string): neve
   revalidatePath("/campanhas");
   revalidatePath(`/campanhas/${idcampanha}`);
   revalidatePath("/campanha");
+  revalidatePath("/campanha/lista");
   redirect(
     `/entrega-blocos?campanha=${idcampanha}&${tipo}=${encodeURIComponent(mensagem)}&v=${Date.now()}`,
   );

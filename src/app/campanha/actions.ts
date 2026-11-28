@@ -21,6 +21,7 @@ async function autorizado() {
 
 function voltar(tipo: "ok" | "erro", mensagem: string): never {
   revalidatePath("/campanha");
+  revalidatePath("/campanha/lista");
   revalidatePath("/campanhas");
   revalidatePath("/entrega-blocos");
   redirect(`/campanha?${tipo}=${encodeURIComponent(mensagem)}&v=${Date.now()}`);

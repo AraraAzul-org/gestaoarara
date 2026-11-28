@@ -169,7 +169,7 @@ function CartaoCampanha({
         )}
         {podeEditar && (
           <Link
-            href={`/campanha?editar=${campanha.idcampanha}`}
+            href={`/campanha/form?editar=${campanha.idcampanha}`}
             className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
           >
             Editar

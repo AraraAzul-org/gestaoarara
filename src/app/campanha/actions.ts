@@ -19,12 +19,14 @@ async function autorizado() {
   return supabase;
 }
 
-function voltar(tipo: "ok" | "erro", mensagem: string): never {
+function voltar(tipo: "ok" | "erro", mensagem: string, id = 0): never {
   revalidatePath("/campanha");
-  revalidatePath("/campanha/lista");
+  revalidatePath("/campanha/form");
   revalidatePath("/campanhas");
   revalidatePath("/entrega-blocos");
-  redirect(`/campanha?${tipo}=${encodeURIComponent(mensagem)}&v=${Date.now()}`);
+  const params = new URLSearchParams({ [tipo]: mensagem, v: String(Date.now()) });
+  if (tipo === "erro" && id > 0) params.set("editar", String(id));
+  redirect(`${tipo === "ok" ? "/campanha" : "/campanha/form"}?${params}`);
 }
 
 function linhasEnviadas(f: FormData): LinhaBloco[] {
@@ -45,6 +47,8 @@ function linhasEnviadas(f: FormData): LinhaBloco[] {
 export async function salvarCampanha(f: FormData) {
   const supabase = await autorizado();
   const txt = (campo: string) => String(f.get(campo) ?? "").trim();
+  const id = Number(txt("id") ?? 0);
+  const sair = (tipo: "ok" | "erro", mensagem: string): never => voltar(tipo, mensagem, id);
 
   const titulo = txt("titulo").slice(0, 200);
   const datainicial = txt("datainicial");
@@ -54,30 +58,30 @@ export async function salvarCampanha(f: FormData) {
   const premiosTexto = txt("valorpremios");
   const ganhadores = txt("ganhadores");
 
-  if (!titulo) voltar("erro", "Informe o título da campanha.");
-  if (!datainicial || !datafinal) voltar("erro", "Informe as datas inicial e final.");
-  if (datafinal < datainicial) voltar("erro", "A data final não pode ser anterior à inicial.");
-  if (!(valorbilhete > 0)) voltar("erro", "Informe o valor do bilhete em reais.");
-  if (!STATUS_CAMPANHA.includes(status)) voltar("erro", "Escolha um status válido.");
+  if (!titulo) sair("erro", "Informe o título da campanha.");
+  if (!datainicial || !datafinal) sair("erro", "Informe as datas inicial e final.");
+  if (datafinal < datainicial) sair("erro", "A data final não pode ser anterior à inicial.");
+  if (!(valorbilhete > 0)) sair("erro", "Informe o valor do bilhete em reais.");
+  if (!STATUS_CAMPANHA.includes(status)) sair("erro", "Escolha um status válido.");
   if (status === "finalizada" && !ganhadores) {
-    voltar("erro", "Informe os ganhadores para finalizar a campanha.");
+    sair("erro", "Informe os ganhadores para finalizar a campanha.");
   }
 
   let linhas: LinhaBloco[] = [];
   try {
     linhas = linhasEnviadas(f);
   } catch {
-    voltar("erro", "A lista de blocos está inválida. Gere os blocos novamente.");
+    sair("erro", "A lista de blocos está inválida. Gere os blocos novamente.");
   }
-  if (linhas.length > 1000) voltar("erro", "Limite de 1000 blocos por campanha.");
+  if (linhas.length > 1000) sair("erro", "Limite de 1000 blocos por campanha.");
   if (linhas.some((l) => !Number.isInteger(l.folhas) || l.folhas <= 0)) {
-    voltar("erro", "Todos os blocos devem ter pelo menos 1 folha.");
+    sair("erro", "Todos os blocos devem ter pelo menos 1 folha.");
   }
   if (linhas.some((l) => !Number.isInteger(l.inicio) || l.inicio <= 0 || !Number.isInteger(l.fim) || l.fim < l.inicio)) {
-    voltar("erro", "Confira a folha inicial e a folha final de cada bloco.");
+    sair("erro", "Confira a folha inicial e a folha final de cada bloco.");
   }
   if (status !== "rascunho" && !linhas.length) {
-    voltar("erro", "Cadastre ao menos um bloco na lista de blocos.");
+    sair("erro", "Cadastre ao menos um bloco na lista de blocos.");
   }
 
   const dados = {
@@ -95,11 +99,10 @@ export async function salvarCampanha(f: FormData) {
     numeracaoinicial: linhas.length ? linhas[0].inicio : Number(txt("numeracaoinicial")) || 1,
   };
 
-  const id = Number(txt("id") ?? 0);
   const { error } = Number.isInteger(id) && id > 0
     ? await supabase.rpc("atualizar_campanha", { p_idcampanha: id, p_dados: dados })
     : await supabase.rpc("criar_campanha", { p_dados: dados });
 
-  if (error) voltar("erro", error.message || "Não foi possível salvar a campanha.");
-  voltar("ok", "Campanha salva.");
+  if (error) sair("erro", error.message || "Não foi possível salvar a campanha.");
+  sair("ok", "Campanha salva.");
 }

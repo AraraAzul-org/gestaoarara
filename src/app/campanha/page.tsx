@@ -150,14 +150,6 @@ export default async function CadastroCampanha({
                     >
                       Blocos
                     </Link>
-                    {c.blocos.length > 0 && (
-                      <Link
-                        href={`/entrega-blocos?campanha=${c.idcampanha}`}
-                        className="rounded border border-azul bg-white px-3 py-1.5 text-sm font-medium text-azul hover:bg-azul/5"
-                      >
-                        Entrega
-                      </Link>
-                    )}
                     <Link
                       href={`/campanha?editar=${c.idcampanha}`}
                       className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"

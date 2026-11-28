@@ -246,6 +246,15 @@ export function FormCampanha({
         />
       </label>
       <label className={rotulo}>
+        Valor total da campanha (calculado)
+        <input
+          readOnly
+          tabIndex={-1}
+          value={textoMoeda(valorTotal)}
+          className={`${campo} max-w-[175px] bg-gray-50 text-right tabular-nums`}
+        />
+      </label>
+      <label className={rotulo}>
         Valor do(s) prêmio(s)
         <input
           name="valorpremios"

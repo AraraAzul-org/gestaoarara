@@ -76,17 +76,6 @@ export default async function CadastroCampanha({
           Cadastre a campanha e sua lista de blocos de rifas, com quantidades e numeração próprias.
         </p>
 
-        {(eu.acessos.has("campanha") || eu.acessos.has("entregablocos")) && (
-          <div className="mt-4">
-            <Link
-              href="/entrega-blocos"
-              className="inline-block rounded border border-azul bg-white px-3 py-1.5 text-sm font-medium text-azul hover:bg-azul/5"
-            >
-              Entrega de blocos
-            </Link>
-          </div>
-        )}
-
         {params.erro && (
           <p role="alert" className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             {params.erro}

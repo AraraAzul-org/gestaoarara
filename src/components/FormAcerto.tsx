@@ -56,12 +56,13 @@ export function FormAcerto({
         </label>
       </div>
       <p className="text-sm text-gray-700">
-        Valor do acerto: <strong className="text-azul">{formatarReais(valor)}</strong> · Devolvido:{" "}
+        Valor do acerto ({quantidade} × {formatarReais(valorBilhete)}):{" "}
+        <strong className="text-azul">{formatarReais(valor)}</strong> · Devolvido:{" "}
         <strong>{devolvido}</strong> rifa(s)
       </p>
       <p className="rounded border-l-4 border-l-amarelo bg-amarelo-claro p-2 text-xs text-gray-700">
-        O que não foi vendido volta como devolvido. O valor do acerto é calculado a partir do valor do
-        bilhete.
+        O que não foi vendido volta como devolvido. O valor do acerto é a quantidade vendida
+        multiplicada pelo valor do bilhete cadastrado nesta campanha.
       </p>
       <div className="flex flex-wrap gap-2">
         <button

@@ -193,9 +193,9 @@ export default async function EntregaBlocos({
                     const acertado = d?.situacao === "acertado";
                     const situacao = situacaoBloco(d);
                     const vendidos = Number(d?.quantvendida ?? 0);
-                    const devolvidos = disponivel
-                      ? null
-                      : Math.max(0, Number(d?.quantrifas ?? 0) - vendidos);
+                    const devolvidos = acertado
+                      ? Math.max(0, Number(d?.quantrifas ?? 0) - vendidos)
+                      : 0;
                     const valorVendido = Math.round(vendidos * unitario * 100) / 100;
                     return (
                       <tr key={bloco.idbloco}>
@@ -219,9 +219,7 @@ export default async function EntregaBlocos({
                         <td className="px-2 py-2 text-right tabular-nums">
                           {d ? formatarReais(valorVendido) : "—"}
                         </td>
-                        <td className="px-2 py-2 text-right tabular-nums">
-                          {devolvidos === null ? "—" : devolvidos}
-                        </td>
+                        <td className="px-2 py-2 text-right tabular-nums">{devolvidos}</td>
                         <td className="px-2 py-2">
                           <span
                             className={`rounded px-2 py-0.5 text-xs font-medium ${

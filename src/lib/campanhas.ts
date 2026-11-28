@@ -147,7 +147,7 @@ export function metricasCampanha(
     aguardando: soma(aguardando, "quantrifas"),
     vendidos: soma(acertados, "quantvendida"),
     valor: Math.round(soma(acertados, "valoracerto") * 100) / 100,
-    devolvido: comResponsavel.reduce(
+    devolvido: acertados.reduce(
       (total, d) => total + Math.max(0, inteiro(d.quantrifas) - inteiro(d.quantvendida)),
       0,
     ),

@@ -358,8 +358,9 @@ export default async function Ajuda() {
             </li>
             <li>
               O acerto pode ser parcial: informe <strong>Quantidade acertada / vendida</strong> e a data.{" "}
-              <strong>Valor do acerto = quantidade vendida × valor do bilhete</strong>; o restante volta como{" "}
-              <strong>Devolvido</strong>. Os totais aparecem no rodapé da tabela.
+              <strong>Valor do acerto = quantidade vendida × valor do bilhete</strong>; após o acerto, o restante volta
+              como <strong>Devolvido</strong>. Enquanto o bloco está <strong>Disponível</strong> ou{" "}
+              <strong>Aguardando</strong>, o Devolvido é <strong>0</strong>. Os totais aparecem no rodapé da tabela.
             </li>
           </Itens>
           <Nota>
